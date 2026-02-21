@@ -1,0 +1,39 @@
+server:
+  port: 8080
+  mode: debug
+
+database:
+  host: database_host
+  port: 3306
+  username: database_username
+  password: "database_password"
+  database: jira_tracker
+  charset: utf8mb4
+  max_idle_conns: 10
+  max_open_conns: 100
+  conn_max_lifetime: 1h
+
+redis:
+  host: redis_host
+  port: 6379
+  password: "redis_password"
+  db: 0
+
+jwt:
+  secret: your-secret-key
+  expire: 24h
+
+sms:
+  provider: mock
+  expire: 5m
+
+timeout:
+  normal: 24h
+  severe: 48h
+
+security:
+  enable_code_verification: false
+  allowed_origins:
+    - "http://localhost:5173"
+    - "http://localhost:3000"
+    - "http://localhost:8080"

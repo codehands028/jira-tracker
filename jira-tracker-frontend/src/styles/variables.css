@@ -1,0 +1,139 @@
+/* 现代化设计系统 - CSS变量 */
+:root {
+  /* 主题切换过渡效果 */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  /* 主题色 */
+  --primary-color: #667eea;
+  --primary-light: #7c8ff7;
+  --primary-dark: #5569d4;
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* 功能色 */
+  --success-color: #48bb78;
+  --success-light: #68d391;
+  --warning-color: #ed8936;
+  --warning-light: #f6ad55;
+  --danger-color: #f56565;
+  --danger-light: #fc8181;
+  --info-color: #4299e1;
+  --info-light: #63b3ed;
+  
+  /* 中性色 */
+  --text-primary: #2d3748;
+  --text-secondary: #4a5568;
+  --text-tertiary: #718096;
+  --text-disabled: #a0aec0;
+  
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f7fafc;
+  --bg-tertiary: #edf2f7;
+  --bg-hover: #f0f4f8;
+  
+  /* 边框色 */
+  --border-color: #e2e8f0;
+  --border-light: #edf2f7;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 4px 14px 0 rgba(102, 126, 234, 0.39);
+  
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* 侧边栏宽度 */
+  --sidebar-width: 240px;
+  --header-height: 64px;
+  
+  /* 毛玻璃效果 */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.18);
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  /* 主题色 */
+  --primary-color: #818cf8;
+  --primary-light: #a5b4fc;
+  --primary-dark: #6366f1;
+  --primary-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+
+  /* 功能色 */
+  --success-color: #34d399;
+  --success-light: #6ee7b7;
+  --warning-color: #fbbf24;
+  --warning-light: #fcd34d;
+  --danger-color: #f87171;
+  --danger-light: #fca5a5;
+  --info-color: #60a5fa;
+  --info-light: #93c5fd;
+
+  /* 中性色 */
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --text-disabled: #6b7280;
+
+  /* 背景色 */
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-tertiary: #374151;
+  --bg-hover: #374151;
+
+  /* 边框色 */
+  --border-color: #374151;
+  --border-light: #374151;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.4);
+  --shadow-button: 0 4px 14px 0 rgba(129, 140, 248, 0.4);
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* 侧边栏宽度 */
+  --sidebar-width: 240px;
+  --header-height: 64px;
+
+  /* 毛玻璃效果 */
+  --glass-bg: rgba(17, 24, 39, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
