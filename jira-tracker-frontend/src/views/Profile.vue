@@ -59,9 +59,11 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getProfile, updateProfile } from '@/api'
+import { useUserStore } from '@/stores/user'
 
 const profileFormRef = ref(null)
 const loading = ref(false)
+const userStore = useUserStore()
 
 const profileForm = reactive({
   id: '',
@@ -117,6 +119,8 @@ const handleUpdate = async () => {
       ElMessage.success('更新成功')
       // 重新获取个人信息
       await fetchProfile()
+      // 同步更新userStore中的用户信息
+      userStore.setUserInfo(profileForm)
     } catch (error) {
       console.error('更新个人信息失败:', error)
     } finally {

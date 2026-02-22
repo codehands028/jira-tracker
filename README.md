@@ -66,7 +66,7 @@ go run scripts/init_data.go
 - 创建管理员账号
 
 **默认管理员账号**：
-- 手机号：`19900138000`(短信未对接)
+- 手机号：`13800138000`(短信未对接)
 - 验证码：任意6位数字（开发模式下）
 
 ### 4. 启动服务
@@ -103,6 +103,58 @@ npm run dev
 
 - **前端地址**：http://localhost:3000
 - **后端地址**：http://localhost:8080
+
+### 6. 使用 Nginx 反向代理（生产环境推荐）
+
+项目提供了 Nginx 配置文件，用于在生产环境中使用 Nginx 作为反向代理。
+
+#### 6.1 配置说明
+
+配置文件位于 `nginx/` 目录：
+- `nginx.conf` - Nginx 主配置文件
+- `jira-tracker.conf` - 项目站点配置文件
+
+#### 6.2 部署步骤
+
+1. **安装 Nginx**
+```bash
+# Ubuntu/Debian
+sudo apt-get install nginx
+
+# CentOS/RHEL
+sudo yum install nginx
+
+# macOS
+brew install nginx
+```
+
+2. **复制配置文件**
+```bash
+# 复制项目配置到 Nginx 配置目录
+sudo cp nginx/jira-tracker.conf /etc/nginx/conf.d/
+# 或根据你的 Nginx 配置目录调整路径
+```
+
+3. **修改配置文件**
+
+编辑 `/etc/nginx/conf.d/jira-tracker.conf`，根据实际情况修改：
+- `server_name` - 你的域名
+- `proxy_pass` - 后端服务地址
+- `root` - 前端静态文件路径
+
+4. **重启 Nginx**
+```bash
+# 测试配置文件
+sudo nginx -t
+
+# 重启 Nginx
+sudo systemctl restart nginx
+# 或
+sudo service nginx restart
+```
+
+5. **验证部署**
+访问配置的域名，确认系统正常运行。
 
 ---
 
@@ -210,8 +262,11 @@ jira-tracker/
 │   │   ├── utils/                 # 工具函数
 │   │   └── views/                 # 页面组件
 │   └── vite.config.js             # Vite 配置
-├── start.sh                       # 启动脚本
-└── stop.sh                        # 停止脚本
+├── nginx/                          # Nginx 配置
+│   ├── nginx.conf                 # Nginx 主配置
+│   └── jira-tracker.conf          # 项目配置
+├── start.sh                        # 启动脚本
+└── stop.sh                         # 停止脚本
 ```
 
 ---

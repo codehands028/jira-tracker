@@ -115,11 +115,11 @@ INSERT INTO `timeout_rules` (`created_at`, `updated_at`, `name`, `normal_limit`,
 
 -- 插入默认管理员账号
 INSERT INTO `users` (`created_at`, `updated_at`, `phone`, `name`, `role`, `status`, `ticket_num`) VALUES
-(NOW(), NOW(), '19900138000', '系统管理员', 'admin', 1, 0);
+(NOW(), NOW(), '13800138000', '系统管理员', 'admin', 1, 0);
 
 -- 插入测试用户（可选）
 INSERT INTO `users` (`created_at`, `updated_at`, `phone`, `name`, `role`, `status`, `ticket_num`) VALUES
-(NOW(), NOW(), '19900138001', '张三', 'test', 1, 0),
-(NOW(), NOW(), '19900138002', '李四', 'dev', 1, 0),
-(NOW(), NOW(), '19900138003', '王五', 'dev', 1, 0),
-(NOW(), NOW(), '19900138004', '赵六', 'test', 1, 0);
+(NOW(), NOW(), '13800138001', '张三', 'test', 1, 0),
+(NOW(), NOW(), '13800138002', '李四', 'dev', 1, 0),
+(NOW(), NOW(), '13800138003', '王五', 'dev', 1, 0),
+(NOW(), NOW(), '13800138004', '赵六', 'test', 1, 0);
