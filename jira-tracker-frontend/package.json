@@ -1,6 +1,7 @@
 {
   "name": "jira-tracker-frontend",
   "version": "1.0.0",
+  "type": "module",
   "description": "Jira 工单跟踪与效率管理平台前端",
   "scripts": {
     "dev": "vite",
@@ -18,6 +19,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.3.4",
-    "vite": "^4.4.9"
+    "vite": "^4.4.9",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31"
   }
 }

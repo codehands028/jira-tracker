@@ -317,7 +317,7 @@ const handleLogin = async () => {
 /* 登录卡片 */
 .login-card {
   display: flex;
-  background: white;
+  background: var(--bg-primary);
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -554,7 +554,7 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: white;
+  background: var(--bg-secondary);
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
@@ -587,21 +587,104 @@ const handleLogin = async () => {
   .login-card {
     flex-direction: column;
   }
-  
+
   .login-decoration {
     padding: 40px 30px;
   }
-  
+
   .decoration-content h1 {
     font-size: 24px;
   }
-  
+
   .login-form-container {
     padding: 40px 30px;
   }
-  
+
   .form-header h2 {
     font-size: 24px;
   }
+}
+
+/* 深色主题 */
+[data-theme="dark"] .login-container {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+[data-theme="dark"] .login-card {
+  background: var(--bg-primary);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .login-decoration {
+  background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%);
+}
+
+[data-theme="dark"] .login-form-container {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] .form-header h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-header p {
+  color: var(--text-tertiary);
+}
+
+[data-theme="dark"] .login-form :deep(.el-input__wrapper) {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .login-form :deep(.el-input__inner) {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .login-form :deep(.el-input__wrapper.is-focus) {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.2);
+}
+
+[data-theme="dark"] .code-btn {
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .login-btn {
+  background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%);
+  box-shadow: 0 4px 14px rgba(30, 136, 229, 0.4);
+}
+
+[data-theme="dark"] .login-btn:hover {
+  box-shadow: 0 6px 20px rgba(30, 136, 229, 0.5);
+}
+
+[data-theme="dark"] .login-tips {
+  background: rgba(30, 136, 229, 0.1);
+}
+
+[data-theme="dark"] .login-tips .el-icon {
+  color: var(--primary-color);
+}
+
+[data-theme="dark"] .test-accounts {
+  background: rgba(30, 136, 229, 0.08);
+  border-color: rgba(30, 136, 229, 0.2);
+}
+
+[data-theme="dark"] .account-item {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .account-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 8px rgba(30, 136, 229, 0.2);
+}
+
+[data-theme="dark"] .account-phone {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .login-footer {
+  color: rgba(255, 255, 255, 0.5);
 }
 </style>

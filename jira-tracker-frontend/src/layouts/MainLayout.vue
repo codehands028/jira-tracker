@@ -119,14 +119,21 @@
         </div>
         
         <div class="header-right">
+          <el-tooltip :content="isDarkMode ? '切换到亮色模式' : '切换到深色模式'" placement="bottom">
+            <el-button circle class="header-btn theme-toggle-btn" @click="toggleDarkMode">
+              <el-icon>
+                <Sunny v-if="isDarkMode" />
+                <Moon v-else />
+              </el-icon>
+            </el-button>
+          </el-tooltip>
+
           <el-button circle class="header-btn" @click="fetchNotifications">
             <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
               <el-icon><Bell /></el-icon>
             </el-badge>
           </el-button>
-          
 
-          
           <el-divider direction="vertical" />
           
           <el-dropdown @command="handleCommand" trigger="click">
@@ -175,7 +182,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 import { getNotifications } from '@/api'
-import { toggleTheme, getTheme } from '@/stores/theme'
+import { toggleDarkMode, getTheme, getThemeMode } from '@/stores/theme'
 
 const route = useRoute()
 const router = useRouter()
@@ -187,6 +194,7 @@ const currentTitle = computed(() => route.meta.title || '首页')
 const userInfo = computed(() => userStore.userInfo)
 const isAdmin = computed(() => userStore.role === 'admin')
 const unreadCount = ref(0)
+const isDarkMode = computed(() => getTheme() === 'dark')
 
 const sidebarWidth = computed(() => isCollapsed.value ? '64px' : '240px')
 
@@ -268,7 +276,7 @@ onUnmounted(() => {
 
 /* 深色主题侧边栏 */
 [data-theme="dark"] .modern-sidebar {
-  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  background: linear-gradient(180deg, #1E1E1E 0%, #121212 100%);
   border-right: 1px solid var(--border-light);
 }
 
@@ -359,6 +367,7 @@ onUnmounted(() => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   white-space: nowrap;
 }
 
@@ -438,7 +447,7 @@ onUnmounted(() => {
 
 /* 深色主题用户卡片 */
 [data-theme="dark"] .user-card {
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(192, 132, 252, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(21, 101, 192, 0.1) 100%);
 }
 
 /* 收起时的用户卡片 */
@@ -565,6 +574,26 @@ onUnmounted(() => {
   background: var(--bg-hover);
   color: var(--primary-color);
   border-color: var(--primary-light);
+}
+
+/* 主题切换按钮 */
+.theme-toggle-btn {
+  transition: all var(--transition-base);
+}
+
+.theme-toggle-btn .el-icon {
+  transition: transform var(--transition-base);
+}
+
+[data-theme="dark"] .theme-toggle-btn {
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+[data-theme="dark"] .theme-toggle-btn:hover {
+  color: #fcd34d;
+  border-color: #fcd34d;
+  background: rgba(251, 191, 36, 0.1);
 }
 
 .header-user {

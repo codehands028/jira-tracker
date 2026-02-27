@@ -175,4 +175,71 @@ onMounted(() => {
 :deep(.el-input.is-disabled .el-input__inner) {
   color: #909399;
 }
+
+/* 深色模式样式 */
+[data-theme="dark"] .profile-card {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .card-title {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] :deep(.el-form-item__label) {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] :deep(.el-input__wrapper) {
+  background-color: var(--bg-secondary);
+  box-shadow: 0 0 0 1px var(--border-color) inset;
+}
+
+[data-theme="dark"] :deep(.el-input__inner) {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] :deep(.el-input.is-disabled .el-input__inner) {
+  color: var(--text-disabled);
+}
+
+[data-theme="dark"] :deep(.el-tag--plain) {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* 头像标签垂直居中 */
+:deep(.el-form-item:first-child) {
+  align-items: flex-start;
+  padding-top: 20px;
+}
+
+:deep(.el-form-item:first-child .el-form-item__label) {
+  line-height: 40px;
+  margin-top: 10px;
+}
+
+/* 手机号输入框深色模式 */
+[data-theme="dark"] :deep(.el-input.is-disabled .el-input__wrapper) {
+  background-color: var(--bg-tertiary) !important;
+  box-shadow: 0 0 0 1px var(--border-color) inset !important;
+}
+
+[data-theme="dark"] :deep(.el-input.is-disabled .el-input__inner) {
+  color: var(--text-disabled) !important;
+  -webkit-text-fill-color: var(--text-disabled) !important;
+}
+
+/* 输入框字数统计深色模式 */
+[data-theme="dark"] :deep(.el-input__count) {
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+}
+
+[data-theme="dark"] :deep(.el-input__count-inner) {
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+}
 </style>

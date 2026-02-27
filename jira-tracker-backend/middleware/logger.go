@@ -16,10 +16,15 @@ func OperationLogMiddleware() gin.HandlerFunc {
 
 		// 只记录需要认证的请求
 		if userID, exists := c.Get("user_id"); exists {
+			// 不记录查询操作（GET请求）
+			if c.Request.Method == "GET" {
+				return
+			}
+
 			// 检查用户是否存在
 			var userExists bool
 			database.DB.Model(&models.User{}).Where("id = ?", userID).Select("count(*) > 0").Scan(&userExists)
-			
+
 			// 只有用户存在时才记录操作日志
 			if userExists {
 				log := &models.OperationLog{
@@ -42,6 +47,8 @@ func getModule(path string) string {
 	case strings.HasPrefix(path, "/api/auth"):
 		return "auth"
 	case strings.HasPrefix(path, "/api/users"):
+		return "user"
+	case strings.HasPrefix(path, "/api/profile"):
 		return "user"
 	case strings.HasPrefix(path, "/api/tickets"):
 		return "ticket"

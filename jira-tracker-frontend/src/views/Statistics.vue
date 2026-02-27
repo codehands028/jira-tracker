@@ -206,7 +206,7 @@ onMounted(() => {
 }
 
 .modern-tabs {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-card);
@@ -260,8 +260,9 @@ onMounted(() => {
 .stat-item {
   text-align: center;
   padding: 12px;
-  background: white;
+  background: var(--bg-primary);
   border-radius: 8px;
+  border: 1px solid var(--border-light);
 }
 
 .stat-value {

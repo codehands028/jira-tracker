@@ -431,7 +431,7 @@ onMounted(() => {
 
 /* 信息卡片 */
 .info-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow-card);
@@ -523,7 +523,7 @@ onMounted(() => {
 
 /* 流转卡片 */
 .flow-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow-card);

@@ -400,7 +400,7 @@ onUnmounted(() => {
 }
 
 .overview-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 24px;
   box-shadow: var(--shadow-card);
@@ -409,12 +409,6 @@ onUnmounted(() => {
   gap: 16px;
   transition: all var(--transition-base);
   border: 1px solid var(--border-light);
-}
-
-/* 深色主题概览卡片 */
-[data-theme="dark"] .overview-card {
-  background: var(--bg-primary);
-  border-color: var(--border-color);
 }
 
 .overview-card:hover {
@@ -478,18 +472,12 @@ onUnmounted(() => {
 
 /* 今日统计 */
 .today-stats {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-light);
-}
-
-/* 深色主题今日统计 */
-[data-theme="dark"] .today-stats {
-  background: var(--bg-primary);
-  border-color: var(--border-color);
 }
 
 .stats-header {
@@ -577,17 +565,11 @@ onUnmounted(() => {
 }
 
 .content-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-light);
   overflow: hidden;
-}
-
-/* 深色主题内容卡片 */
-[data-theme="dark"] .content-card {
-  background: var(--bg-primary);
-  border-color: var(--border-color);
 }
 
 .card-header {

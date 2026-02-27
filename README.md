@@ -11,6 +11,8 @@ Jira Tracker 是一个工单跟踪与效率管理平台，提供工单流转管�
 - ✅ 用户权限管理
 - ✅ 操作日志记录
 - ✅ 批量操作功能
+- ✅ 深色模式支持
+- ✅ 多浏览器兼容（Chrome/Firefox/Edge）
 
 ---
 
@@ -23,19 +25,10 @@ Jira Tracker 是一个工单跟踪与效率管理平台，提供工单流转管�
 - **MySQL**: 5.7 或更高版本
 - **Redis**: 6.0 或更高版本
 
-### 2. 数据库配置
+### 2. 配置文件说明
 
-#### 2.1 创建数据库
-```bash
-# 方式一：使用 SQL 脚本
-mysql -u root -p < jira-tracker-backend/scripts/init.sql
+#### 2.1 后端配置
 
-# 方式二：手动创建
-mysql -u root -p
-CREATE DATABASE jira_tracker DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-#### 2.2 修改配置文件
 编辑 `jira-tracker-backend/config/config.yaml`：
 ```yaml
 database:
@@ -51,6 +44,34 @@ redis:
   port: 6379
   password: ""  # 如果有密码，填写密码
   db: 0
+
+server:
+  port: 8080  # 后端服务端口
+  mode: debug  # 运行模式: debug/release
+```
+
+#### 2.2 前端配置
+
+前端访问后端的路径可以通过环境变量文件进行设置：
+
+1. 编辑 `jira-tracker-frontend/.env.development` 文件
+2. 配置后端API基础路径：
+```bash
+VITE_API_BASE_URL=http://localhost:8080/api
+```
+
+**注意**：修改配置后需要重启前端服务
+
+#### 2.3 数据库配置
+
+##### 2.3.1 创建数据库
+```bash
+# 方式一：使用 SQL 脚本
+mysql -u root -p < jira-tracker-backend/scripts/init.sql
+
+# 方式二：手动创建
+mysql -u root -p
+CREATE DATABASE jira_tracker DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 3. 初始化数据
@@ -199,6 +220,10 @@ sudo service nginx restart
 - 规则 CRUD
 - 规则启用/停用
 - 普通超时、严重超时配置
+
+### 8. 界面设置
+- 深色/浅色模式切换
+- 多浏览器兼容（Chrome/Firefox/Edge）
 
 ---
 

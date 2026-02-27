@@ -67,49 +67,53 @@
   /* 毛玻璃效果 */
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.18);
+
+  /* 毛玻璃效果 - 降级方案 */
+  --glass-bg-fallback: #ffffff;
+  --glass-border-fallback: #e2e8f0;
 }
 
-/* 深色主题 */
+/* 深色主题 - PRD规范配色 */
 [data-theme="dark"] {
-  /* 主题色 */
-  --primary-color: #818cf8;
-  --primary-light: #a5b4fc;
-  --primary-dark: #6366f1;
-  --primary-gradient: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+  /* 主题色 - 按钮和链接色 */
+  --primary-color: #1E88E5;
+  --primary-light: #42A5F5;
+  --primary-dark: #1565C0;
+  --primary-gradient: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%);
 
   /* 功能色 */
-  --success-color: #34d399;
-  --success-light: #6ee7b7;
-  --warning-color: #fbbf24;
-  --warning-light: #fcd34d;
-  --danger-color: #f87171;
-  --danger-light: #fca5a5;
-  --info-color: #60a5fa;
-  --info-light: #93c5fd;
+  --success-color: #4CAF50;
+  --success-light: #66BB6A;
+  --warning-color: #FF9800;
+  --warning-light: #FFB74D;
+  --danger-color: #EF5350;
+  --danger-light: #EF5350;
+  --info-color: #29B6F6;
+  --info-light: #4FC3F7;
 
-  /* 中性色 */
-  --text-primary: #f3f4f6;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
-  --text-disabled: #6b7280;
+  /* 中性色 - 文本色 */
+  --text-primary: #E0E0E0;
+  --text-secondary: #BDBDBD;
+  --text-tertiary: #9E9E9E;
+  --text-disabled: #757575;
 
   /* 背景色 */
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-tertiary: #374151;
-  --bg-hover: #374151;
+  --bg-primary: #121212;
+  --bg-secondary: #1E1E1E;
+  --bg-tertiary: #333333;
+  --bg-hover: #2D2D2D;
 
-  /* 边框色 */
-  --border-color: #374151;
-  --border-light: #374151;
+  /* 边框色 - 输入框和选项卡 */
+  --border-color: #333333;
+  --border-light: #2D2D2D;
 
   /* 阴影 */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.4);
-  --shadow-button: 0 4px 14px 0 rgba(129, 140, 248, 0.4);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 2px 12px 0 rgba(0, 0, 0, 0.5);
+  --shadow-button: 0 4px 14px 0 rgba(30, 136, 229, 0.5);
 
   /* 圆角 */
   --radius-sm: 6px;
@@ -134,6 +138,10 @@
   --header-height: 64px;
 
   /* 毛玻璃效果 */
-  --glass-bg: rgba(17, 24, 39, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(18, 18, 18, 0.9);
+  --glass-border: rgba(255, 255, 255, 0.06);
+
+  /* 毛玻璃效果 - 降级方案 */
+  --glass-bg-fallback: #121212;
+  --glass-border-fallback: #333333;
 }

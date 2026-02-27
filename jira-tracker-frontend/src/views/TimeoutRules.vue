@@ -485,7 +485,7 @@ onMounted(() => {
 }
 
 .rule-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-card);

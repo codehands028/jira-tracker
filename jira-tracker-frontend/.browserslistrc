@@ -1,0 +1,23 @@
+# 支持的浏览器列表
+> 1%
+last 2 versions
+not dead
+not IE 11
+
+# Chrome
+Chrome >= 90
+
+# Firefox
+Firefox >= 88
+
+# Edge
+Edge >= 90
+
+# Safari
+Safari >= 14
+
+# iOS Safari
+iOS >= 14
+
+# Android
+Android >= 90

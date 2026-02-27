@@ -399,7 +399,7 @@ onMounted(() => {
 }
 
 .user-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 20px;
   box-shadow: var(--shadow-card);
@@ -496,9 +496,10 @@ onMounted(() => {
   margin-top: 24px;
   display: flex;
   justify-content: flex-end;
-  background: white;
+  background: var(--bg-primary);
   padding: 16px 20px;
   border-radius: 12px;
+  border: 1px solid var(--border-light);
 }
 
 .modern-dialog :deep(.el-dialog__header) {

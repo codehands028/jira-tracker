@@ -328,7 +328,7 @@ onMounted(() => {
 }
 
 .filter-card {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
@@ -357,7 +357,7 @@ onMounted(() => {
 }
 
 .log-item {
-  background: white;
+  background: var(--bg-primary);
   border-radius: 12px;
   padding: 16px 20px;
   box-shadow: var(--shadow-sm);
@@ -441,7 +441,7 @@ onMounted(() => {
   margin-top: 24px;
   display: flex;
   justify-content: flex-end;
-  background: white;
+  background: var(--bg-primary);
   padding: 16px 20px;
   border-radius: 12px;
 }
