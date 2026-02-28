@@ -196,7 +196,7 @@ func (s *TicketService) CloseTicket(ticketID uint, testerID uint, conclusion str
 }
 
 // GetTicketList 获取工单列表
-func (s *TicketService) GetTicketList(page, pageSize int, status, priority string) ([]models.Ticket, int64, error) {
+func (s *TicketService) GetTicketList(page, pageSize int, status, priority string, currentUserID uint) ([]models.Ticket, int64, error) {
 	var tickets []models.Ticket
 	var total int64
 
@@ -207,6 +207,9 @@ func (s *TicketService) GetTicketList(page, pageSize int, status, priority strin
 	}
 	if priority != "" {
 		query = query.Where("priority = ?", priority)
+	}
+	if currentUserID > 0 {
+		query = query.Where("current_user_id = ?", currentUserID)
 	}
 
 	// 统计总数
@@ -453,11 +456,15 @@ type DashboardData struct {
 
 // TicketOverview 工单概览
 type TicketOverview struct {
-	Total        int64 `json:"total"`
-	Processing   int64 `json:"processing"`
-	Retesting    int64 `json:"retesting"`
-	Closed       int64 `json:"closed"`
-	TimeoutCount int64 `json:"timeout_count"`
+	Total          int64 `json:"total"`
+	Processing     int64 `json:"processing"`
+	Retesting      int64 `json:"retesting"`
+	Closed         int64 `json:"closed"`
+	TimeoutCount   int64 `json:"timeout_count"`
+	TotalTrend     int   `json:"total_trend"`      // 工单总数较昨日变化百分比
+	ProcessingTrend int  `json:"processing_trend"` // 处理中较昨日变化百分比
+	RetestingTrend int   `json:"retesting_trend"`  // 待复测较昨日变化百分比
+	TimeoutTrend   int   `json:"timeout_trend"`    // 超时工单较昨日变化百分比
 }
 
 // TodayStatistics 今日统计
@@ -499,17 +506,34 @@ type RecentActivity struct {
 func (s *TicketService) GetDashboard() (*DashboardData, error) {
 	data := &DashboardData{}
 
-	// 1. 工单概览
+	// 获取今日和昨日的日期字符串
+	today := time.Now().Format("2006-01-02")
+	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+
+	// 1. 工单概览 - 今日数据
 	overview := TicketOverview{}
 	database.DB.Model(&models.Ticket{}).Count(&overview.Total)
 	database.DB.Model(&models.Ticket{}).Where("status = ?", "processing").Count(&overview.Processing)
 	database.DB.Model(&models.Ticket{}).Where("status = ?", "retesting").Count(&overview.Retesting)
 	database.DB.Model(&models.Ticket{}).Where("status = ?", "closed").Count(&overview.Closed)
 	database.DB.Model(&models.Ticket{}).Where("is_timeout = ?", true).Count(&overview.TimeoutCount)
+
+	// 计算趋势 - 昨日数据
+	var yesterdayTotal, yesterdayProcessing, yesterdayRetesting, yesterdayTimeout int64
+	database.DB.Model(&models.Ticket{}).Where("DATE(created_at) <= ?", yesterday).Count(&yesterdayTotal)
+	database.DB.Model(&models.Ticket{}).Where("status = ? AND DATE(updated_at) <= ?", "processing", yesterday).Count(&yesterdayProcessing)
+	database.DB.Model(&models.Ticket{}).Where("status = ? AND DATE(updated_at) <= ?", "retesting", yesterday).Count(&yesterdayRetesting)
+	database.DB.Model(&models.Ticket{}).Where("is_timeout = ? AND DATE(updated_at) <= ?", true, yesterday).Count(&yesterdayTimeout)
+
+	// 计算变化百分比
+	overview.TotalTrend = calculateTrend(overview.Total, yesterdayTotal)
+	overview.ProcessingTrend = calculateTrend(overview.Processing, yesterdayProcessing)
+	overview.RetestingTrend = calculateTrend(overview.Retesting, yesterdayRetesting)
+	overview.TimeoutTrend = calculateTrend(overview.TimeoutCount, yesterdayTimeout)
+
 	data.TicketOverview = overview
 
 	// 2. 今日统计
-	today := time.Now().Format("2006-01-02")
 	todayStats := TodayStatistics{}
 	database.DB.Model(&models.Ticket{}).Where("DATE(created_at) = ?", today).Count(&todayStats.NewTickets)
 	database.DB.Model(&models.Ticket{}).Where("status = ? AND DATE(updated_at) = ?", "closed", today).Count(&todayStats.ClosedTickets)
@@ -664,6 +688,18 @@ func (s *TicketService) BatchAssignTickets(req *BatchAssignRequest) (int, error)
 	return successCount, nil
 }
 
+// calculateTrend 计算变化百分比
+func calculateTrend(today, yesterday int64) int {
+	if yesterday == 0 {
+		if today > 0 {
+			return 100 // 从0增长视为100%
+		}
+		return 0
+	}
+	change := float64(today-yesterday) / float64(yesterday) * 100
+	return int(change)
+}
+
 // BatchCloseRequest 批量关闭请求
 type BatchCloseRequest struct {
 	TicketIDs  []uint `json:"ticket_ids" binding:"required"`
@@ -717,3 +753,5 @@ func (s *TicketService) BatchCloseTickets(req *BatchCloseRequest) (int, error) {
 
 	return successCount, nil
 }
+
+// calculateTrend 计算变化百分比

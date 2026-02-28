@@ -57,7 +57,7 @@ server:
 1. 编辑 `jira-tracker-frontend/.env.development` 文件
 2. 配置后端API基础路径：
 ```bash
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:15010/api
 ```
 
 **注意**：修改配置后需要重启前端服务
@@ -98,11 +98,6 @@ go run scripts/init_data.go
 ```bash
 chmod +x start.sh
 ./start.sh
-```
-
-**Windows**：
-```cmd
-start.bat
 ```
 
 #### 方式二：手动启动
@@ -152,6 +147,7 @@ brew install nginx
 2. **复制配置文件**
 ```bash
 # 复制项目配置到 Nginx 配置目录
+sudo cp nginx/nginx.conf /etc/nginx/
 sudo cp nginx/jira-tracker.conf /etc/nginx/conf.d/
 # 或根据你的 Nginx 配置目录调整路径
 ```

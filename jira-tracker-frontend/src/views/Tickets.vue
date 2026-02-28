@@ -57,6 +57,22 @@
           <el-option label="紧急" value="critical" />
         </el-select>
 
+        <el-select
+          v-model="filterUser"
+          placeholder="处理人筛选"
+          clearable
+          @change="fetchTickets"
+          class="filter-item"
+        >
+          <el-option label="全部处理人" value="" />
+          <el-option
+            v-for="user in users"
+            :key="user.id"
+            :label="user.name"
+            :value="user.id"
+          />
+        </el-select>
+
         <el-input
           v-model="searchKeyword"
           placeholder="搜索工单编号或描述"
@@ -89,6 +105,7 @@
         @selection-change="handleSelectionChange"
         class="modern-table"
         :row-class-name="getRowClassName"
+        row-key="id"
       >
         <el-table-column type="selection" width="50" />
         
@@ -426,6 +443,7 @@ const createFormRef = ref(null)
 
 const filterStatus = ref('')
 const filterPriority = ref('')
+const filterUser = ref('')
 const searchKeyword = ref('')
 
 const batchAssignTo = ref(null)
@@ -471,14 +489,23 @@ const canBatchClose = computed(() => {
 })
 
 const fetchTickets = async () => {
+  // 延迟显示 loading，避免快速请求时的闪烁
+  let loadingTimer = null
+  const showLoading = () => {
+    loadingTimer = setTimeout(() => {
+      loading.value = true
+    }, 150)
+  }
+  showLoading()
+
   try {
-    loading.value = true
     console.log('开始获取工单列表...')
     const data = await getTickets({
       page: pagination.page,
       page_size: pagination.pageSize,
       status: filterStatus.value,
-      priority: filterPriority.value
+      priority: filterPriority.value,
+      current_user_id: filterUser.value
     })
     console.log('获取工单列表成功:', data)
     tickets.value = data.list
@@ -488,6 +515,7 @@ const fetchTickets = async () => {
     console.error('错误状态码:', error.response?.status)
     console.error('错误信息:', error.response?.data)
   } finally {
+    if (loadingTimer) clearTimeout(loadingTimer)
     loading.value = false
   }
 }
@@ -723,6 +751,27 @@ onMounted(() => {
 .modern-table {
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* 表格容器过渡动画 */
+.modern-table :deep(.el-table__body-wrapper) {
+  transition: opacity 0.2s ease;
+}
+
+/* 表格数据更新时淡入 */
+.modern-table :deep(.el-table__row) {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 工单链接 */

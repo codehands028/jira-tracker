@@ -486,6 +486,25 @@ body[data-theme="dark"] .el-pagination__sizes .el-select .el-input__wrapper.is-f
   overflow: hidden;
 }
 
+/* 表格行渲染优化 - 防止闪烁 */
+.el-table__body-wrapper {
+  transform: translateZ(0);
+}
+
+.el-table__row {
+  transform: translateZ(0);
+}
+
+/* Loading 遮罩过渡优化 */
+.el-loading-mask {
+  transition: opacity 0.2s ease !important;
+  backdrop-filter: blur(2px);
+}
+
+.el-loading-spinner {
+  transform: translateZ(0);
+}
+
 .el-table th.el-table__cell {
   background: var(--bg-secondary);
   color: var(--text-secondary);
@@ -787,6 +806,18 @@ body[data-theme="dark"] .el-pagination .el-pagination__classifier {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-light);
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+/* 防止 popper 阴影闪烁 */
+.el-popper {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+.el-popper.is-light {
+  box-shadow: var(--shadow-lg);
 }
 
 .el-select-dropdown__item {

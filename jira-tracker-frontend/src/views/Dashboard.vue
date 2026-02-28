@@ -227,7 +227,11 @@ const overview = reactive({
   total: 0,
   processing: 0,
   retesting: 0,
-  timeout_count: 0
+  timeout_count: 0,
+  total_trend: 0,
+  processing_trend: 0,
+  retesting_trend: 0,
+  timeout_trend: 0
 })
 
 const todayStats = reactive({
@@ -249,28 +253,28 @@ const overviewCards = computed(() => [
     label: '工单总数',
     value: overview.total,
     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    trend: 12
+    trend: overview.total_trend
   },
   {
     icon: 'Loading',
     label: '处理中',
     value: overview.processing,
     gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-    trend: -5
+    trend: overview.processing_trend
   },
   {
     icon: 'CircleCheck',
     label: '待复测',
     value: overview.retesting,
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-    trend: 8
+    trend: overview.retesting_trend
   },
   {
     icon: 'Warning',
     label: '超时工单',
     value: overview.timeout_count,
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-    trend: -2
+    trend: overview.timeout_trend
   }
 ])
 
@@ -459,11 +463,11 @@ onUnmounted(() => {
 }
 
 .trend.up {
-  color: var(--success-color);
+  color: var(--danger-color);
 }
 
 .trend.down {
-  color: var(--danger-color);
+  color: var(--success-color);
 }
 
 .trend-label {

@@ -15,24 +15,48 @@ NC='\033[0m' # No Color
 
 # 检查是否安装了必要的工具
 check_command() {
-    if ! command -v $1 &> /dev/null; then
-        echo -e "${RED}错误: 未找到 $1，请先安装${NC}"
-        return 1
+    # 使用type命令检测，不输出路径
+    if type "$1" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ $1 已安装${NC}"
+        return 0
     fi
-    return 0
+
+    echo -e "${RED}错误: 未找到 $1，请先安装${NC}"
+    return 1
 }
 
 # 检查服务是否运行
 check_service() {
     local service=$1
     local port=$2
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
-        echo -e "${GREEN}✓ $service 已在端口 $port 运行${NC}"
-        return 0
-    else
-        echo -e "${YELLOW}✗ $service 未在端口 $port 运行${NC}"
-        return 1
+
+    # 方法1: 使用nc命令检测端口
+    if type nc >/dev/null 2>&1; then
+        if nc -z localhost "$port" 2>/dev/null; then
+            echo -e "${GREEN}✓ $service 已在端口 $port 运行${NC}"
+            return 0
+        fi
     fi
+
+    # 方法2: 使用lsof检测端口（需要root权限）
+    if type lsof >/dev/null 2>&1; then
+        if lsof -Pi :"$port" -sTCP:LISTEN -t >/dev/null 2>&1 || \
+           lsof -i :"$port" -sTCP:LISTEN -t >/dev/null 2>&1; then
+            echo -e "${GREEN}✓ $service 已在端口 $port 运行${NC}"
+            return 0
+        fi
+    fi
+
+    # 方法3: 使用netstat检测端口
+    if type netstat >/dev/null 2>&1; then
+        if netstat -an 2>/dev/null | grep -q "LISTEN.*:$port "; then
+            echo -e "${GREEN}✓ $service 已在端口 $port 运行${NC}"
+            return 0
+        fi
+    fi
+
+    echo -e "${YELLOW}✗ $service 未在端口 $port 运行${NC}"
+    return 1
 }
 
 echo "检查必要的工具..."

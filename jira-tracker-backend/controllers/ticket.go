@@ -39,8 +39,14 @@ func GetTicketList(c *gin.Context) {
 	status := c.Query("status")
 	priority := c.Query("priority")
 
+	var currentUserID uint
+	if userIDStr := c.Query("current_user_id"); userIDStr != "" {
+		id, _ := strconv.ParseUint(userIDStr, 10, 32)
+		currentUserID = uint(id)
+	}
+
 	ticketService := services.NewTicketService()
-	tickets, total, err := ticketService.GetTicketList(page, pageSize, status, priority)
+	tickets, total, err := ticketService.GetTicketList(page, pageSize, status, priority, currentUserID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
