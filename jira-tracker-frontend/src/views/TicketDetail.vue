@@ -67,7 +67,7 @@
             流转工单
           </el-button>
           <el-button
-            v-if="isTestOrAdmin && ticket.status === 'retesting'"
+            v-if="isTestOrAdmin && (ticket.status === 'retesting' || ticket.status === 'timeout')"
             type="success"
             @click="showRetestDialog = true"
           >
@@ -75,7 +75,7 @@
             复测工单
           </el-button>
           <el-button
-            v-if="isTestOrAdmin && (ticket.status === 'retesting' || ticket.status === 'processing')"
+            v-if="isTestOrAdmin && (ticket.status === 'retesting' || ticket.status === 'processing' || ticket.status === 'timeout')"
             type="danger"
             @click="showCloseDialog = true"
           >
@@ -382,7 +382,7 @@ const getStatusLabel = (status) => {
     processing: '处理中',
     retesting: '待复测',
     closed: '已关闭',
-    timeout: '已超时'
+    timeout: '超时'
   }
   return map[status] || status
 }

@@ -40,12 +40,14 @@
         <el-menu-item index="/notifications">
           <el-icon><Bell /></el-icon>
           <template #title>
-            <span>通知中心</span>
-            <el-badge
-              v-if="unreadCount > 0"
-              :value="unreadCount"
-              class="menu-badge"
-            />
+            <div class="menu-item-content">
+              <span>通知中心</span>
+              <el-badge
+                v-if="unreadCount > 0"
+                :value="unreadCount"
+                class="menu-badge"
+              />
+            </div>
           </template>
         </el-menu-item>
         
@@ -128,7 +130,7 @@
             </el-button>
           </el-tooltip>
 
-          <el-button circle class="header-btn" @click="fetchNotifications">
+          <el-button circle class="header-btn" @click="router.push('/notifications')">
             <el-badge :value="unreadCount" :hidden="unreadCount === 0" :max="99">
               <el-icon><Bell /></el-icon>
             </el-badge>
@@ -181,19 +183,20 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { getNotifications } from '@/api'
+import { useNotificationStore } from '@/stores/notification'
 import { toggleDarkMode, getTheme, getThemeMode } from '@/stores/theme'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const notificationStore = useNotificationStore()
 
 const isCollapsed = ref(false)
 const activeMenu = computed(() => route.path)
 const currentTitle = computed(() => route.meta.title || '首页')
 const userInfo = computed(() => userStore.userInfo)
 const isAdmin = computed(() => userStore.role === 'admin')
-const unreadCount = ref(0)
+const unreadCount = computed(() => notificationStore.unreadCount)
 const isDarkMode = computed(() => getTheme() === 'dark')
 
 const sidebarWidth = computed(() => isCollapsed.value ? '64px' : '240px')
@@ -234,20 +237,13 @@ const getRoleTagType = (role) => {
   return map[role] || 'info'
 }
 
-const fetchNotifications = async () => {
-  try {
-    const data = await getNotifications({ page: 1, page_size: 100 })
-    unreadCount.value = data.list.filter(n => !n.is_read).length
-  } catch (error) {
-    console.error('获取通知失败:', error)
-  }
-}
-
 let timer = null
 
 onMounted(() => {
-  fetchNotifications()
-  timer = setInterval(fetchNotifications, 5 * 60 * 1000)
+  notificationStore.fetchNotifications()
+  timer = setInterval(() => {
+    notificationStore.fetchNotifications()
+  }, 5 * 60 * 1000)
 })
 
 onUnmounted(() => {
@@ -357,7 +353,6 @@ onUnmounted(() => {
   color: white;
   font-size: 20px;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .logo-text {
@@ -431,8 +426,26 @@ onUnmounted(() => {
   margin: 8px 0;
 }
 
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+}
+
 .menu-badge {
-  margin-left: 8px;
+  margin-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 收起时隐藏通知badge */
+.modern-sidebar[style*="64px"] .menu-badge {
+  display: none;
 }
 
 /* 用户卡片 */

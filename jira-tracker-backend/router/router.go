@@ -26,6 +26,7 @@ func SetupRouter() *gin.Engine {
 	// 需要认证的路由
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.CSRFMiddleware())
 	{
 		// 个人信息
 		profile := api.Group("/profile")

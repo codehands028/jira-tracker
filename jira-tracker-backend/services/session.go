@@ -48,6 +48,18 @@ func (s *SessionService) ValidateSession(token string) (bool, error) {
 
 // InvalidateSession 使会话失效
 func (s *SessionService) InvalidateSession(token string) error {
+	// 获取session信息
+	var session models.Session
+	if err := s.db.Where("token = ?", token).First(&session).Error; err != nil {
+		return err
+	}
+
+	// 使CSRF token失效
+	if err := s.InvalidateCSRFToken(session.SessionID); err != nil {
+		return err
+	}
+
+	// 使会话失效
 	return s.db.Model(&models.Session{}).Where("token = ?", token).Update("is_active", false).Error
 }
 
@@ -66,4 +78,9 @@ func (s *SessionService) GetUserActiveSessions(userID uint) (int64, error) {
 	var count int64
 	err := s.db.Model(&models.Session{}).Where("user_id = ? AND is_active = ?", userID, true).Count(&count).Error
 	return count, err
+}
+
+// InvalidateCSRFToken 使CSRF token失效
+func (s *SessionService) InvalidateCSRFToken(sessionID string) error {
+	return s.db.Model(&models.Session{}).Where("session_id = ?", sessionID).Update("is_active", false).Error
 }

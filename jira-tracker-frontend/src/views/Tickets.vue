@@ -38,8 +38,21 @@
           <el-option label="已关闭" value="closed">
             <el-tag type="success" size="small">已关闭</el-tag>
           </el-option>
-          <el-option label="已超时" value="timeout">
-            <el-tag type="danger" size="small">已超时</el-tag>
+        </el-select>
+
+        <el-select
+          v-model="filterTimeout"
+          placeholder="超时筛选"
+          clearable
+          @change="fetchTickets"
+          class="filter-item"
+        >
+          <el-option label="全部" value="" />
+          <el-option label="超时工单" value="true">
+            <el-tag type="danger" size="small">超时</el-tag>
+          </el-option>
+          <el-option label="未超时" value="false">
+            <el-tag type="success" size="small">未超时</el-tag>
           </el-option>
         </el-select>
 
@@ -444,6 +457,7 @@ const createFormRef = ref(null)
 const filterStatus = ref('')
 const filterPriority = ref('')
 const filterUser = ref('')
+const filterTimeout = ref('')
 const searchKeyword = ref('')
 
 const batchAssignTo = ref(null)
@@ -500,13 +514,18 @@ const fetchTickets = async () => {
 
   try {
     console.log('开始获取工单列表...')
-    const data = await getTickets({
+    const params = {
       page: pagination.page,
       page_size: pagination.pageSize,
       status: filterStatus.value,
       priority: filterPriority.value,
       current_user_id: filterUser.value
-    })
+    }
+    // 添加超时筛选参数
+    if (filterTimeout.value) {
+      params.is_timeout = filterTimeout.value
+    }
+    const data = await getTickets(params)
     console.log('获取工单列表成功:', data)
     tickets.value = data.list
     pagination.total = data.total
@@ -630,7 +649,7 @@ const getStatusLabel = (status) => {
     processing: '处理中',
     retesting: '待复测',
     closed: '已关闭',
-    timeout: '已超时'
+    timeout: '超时'
   }
   return map[status] || status
 }
@@ -801,13 +820,22 @@ onMounted(() => {
 .status-cell {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  height: 100%;
+}
+
+.status-cell span {
+  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .status-dot.processing {

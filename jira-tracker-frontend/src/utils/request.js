@@ -45,6 +45,10 @@ request.interceptors.request.use(
     if (userStore.token) {
       config.headers.Authorization = `Bearer ${userStore.token}`
     }
+    // 添加CSRF token到请求头
+    if (userStore.csrfToken) {
+      config.headers['X-CSRF-Token'] = userStore.csrfToken
+    }
     console.log('发送请求:', config.method?.toUpperCase(), config.url)
     console.log('请求头:', config.headers)
     return config
@@ -57,6 +61,12 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   response => {
+    // 如果响应头中有新的CSRF token，更新本地存储
+    const newCsrfToken = response.headers['x-csrf-token']
+    if (newCsrfToken) {
+      const userStore = useUserStore()
+      userStore.setCsrfToken(newCsrfToken)
+    }
     return response.data
   },
   error => {
@@ -67,18 +77,51 @@ request.interceptors.response.use(
 
     if (error.response) {
       const errorMsg = error.response.data?.error || '请求失败'
-      switch (error.response.status) {
+      const statusCode = error.response.status
+
+      // 检查是否是重复工单错误
+      if (errorMsg.includes('Duplicate entry') && errorMsg.includes('jira_key')) {
+        showErrorMessage('该工单编号已存在，请检查后重新输入')
+        return Promise.reject(error)
+      }
+
+      // 根据状态码提供友好的错误提示
+      switch (statusCode) {
+        case 400:
+          showErrorMessage(errorMsg || '请求参数有误，请检查输入内容')
+          break
         case 401:
           showErrorMessage('登录已过期，请重新登录')
           const userStore = useUserStore()
           userStore.logout()
           router.push('/login')
           break
+        case 403:
+          showErrorMessage('您没有权限执行此操作')
+          break
+        case 404:
+          showErrorMessage('请求的资源不存在')
+          break
+        case 429:
+          showErrorMessage('操作过于频繁，请稍后再试')
+          break
+        case 500:
+          showErrorMessage('服务器内部错误，请稍后重试或联系管理员')
+          break
+        case 502:
+        case 503:
+        case 504:
+          showErrorMessage('服务暂时不可用，请稍后重试')
+          break
         default:
           showErrorMessage(errorMsg)
       }
+    } else if (error.code === 'ECONNABORTED') {
+      showErrorMessage('请求超时，请检查网络连接后重试')
+    } else if (error.message === 'Network Error') {
+      showErrorMessage('网络连接失败，请检查网络设置')
     } else {
-      showErrorMessage('网络错误，请检查网络连接')
+      showErrorMessage('请求失败，请稍后重试')
     }
     return Promise.reject(error)
   }

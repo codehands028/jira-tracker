@@ -196,7 +196,7 @@ func (s *TicketService) CloseTicket(ticketID uint, testerID uint, conclusion str
 }
 
 // GetTicketList 获取工单列表
-func (s *TicketService) GetTicketList(page, pageSize int, status, priority string, currentUserID uint) ([]models.Ticket, int64, error) {
+func (s *TicketService) GetTicketList(page, pageSize int, status, priority string, currentUserID uint, isTimeout *bool) ([]models.Ticket, int64, error) {
 	var tickets []models.Ticket
 	var total int64
 
@@ -210,6 +210,9 @@ func (s *TicketService) GetTicketList(page, pageSize int, status, priority strin
 	}
 	if currentUserID > 0 {
 		query = query.Where("current_user_id = ?", currentUserID)
+	}
+	if isTimeout != nil {
+		query = query.Where("is_timeout = ?", *isTimeout)
 	}
 
 	// 统计总数
@@ -275,11 +278,10 @@ func (s *TicketService) CheckTimeout() error {
 				timeoutLevel = "severe"
 			}
 
-			// 更新工单超时状态
+			// 更新工单超时状态（保留原有状态，只标记超时）
 			database.DB.Model(&ticket).Updates(map[string]any{
 				"is_timeout":    true,
 				"timeout_level": timeoutLevel,
-				"status":        "timeout",
 			})
 
 			// 创建超时通知

@@ -32,6 +32,8 @@ func CORSMiddleware() gin.HandlerFunc {
 		
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+		// 暴露X-CSRF-Token响应头给前端
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "X-CSRF-Token")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)

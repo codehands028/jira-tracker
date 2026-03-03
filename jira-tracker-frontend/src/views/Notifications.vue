@@ -88,10 +88,12 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getNotifications, markNotificationAsRead } from '@/api'
+import { useNotificationStore } from '@/stores/notification'
 import dayjs from 'dayjs'
 
 const loading = ref(false)
 const notifications = ref([])
+const notificationStore = useNotificationStore()
 
 const pagination = reactive({
   page: 1,
@@ -119,6 +121,8 @@ const handleMarkAsRead = async (notification) => {
   try {
     await markNotificationAsRead(notification.id)
     ElMessage.success('标记成功')
+    // 更新notification store中的未读计数
+    notificationStore.fetchNotifications()
     fetchNotifications()
   } catch (error) {
     console.error('标记通知失败:', error)

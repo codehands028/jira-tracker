@@ -13,14 +13,14 @@ import (
 func CreateUser(c *gin.Context) {
 	var req services.CreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数格式错误，请检查输入内容"})
 		return
 	}
 
 	userService := services.NewUserService()
 	user, err := userService.CreateUser(&req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建用户失败，请稍后重试"})
 		return
 	}
 
@@ -37,13 +37,13 @@ func UpdateUser(c *gin.Context) {
 
 	var req services.UpdateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数格式错误，请检查输入内容"})
 		return
 	}
 
 	userService := services.NewUserService()
 	if err := userService.UpdateUser(uint(id), &req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新用户失败，请稍后重试"})
 		return
 	}
 
@@ -60,7 +60,7 @@ func DeleteUser(c *gin.Context) {
 
 	userService := services.NewUserService()
 	if err := userService.DeleteUser(uint(id)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除用户失败，请稍后重试"})
 		return
 	}
 
@@ -75,7 +75,7 @@ func GetUserList(c *gin.Context) {
 	userService := services.NewUserService()
 	users, total, err := userService.GetUserList(page, pageSize)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取用户列表失败，请稍后重试"})
 		return
 	}
 

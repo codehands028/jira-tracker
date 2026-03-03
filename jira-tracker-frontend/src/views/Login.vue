@@ -169,11 +169,11 @@ const loginRules = {
 const handleSendCode = async () => {
   try {
     await loginFormRef.value.validateField('phone')
-    
+
     sendingCode.value = true
     await sendCode(loginForm.phone)
     ElMessage.success('验证码已发送')
-    
+
     // 开始倒计时
     countdown.value = 60
     const timer = setInterval(() => {
@@ -183,6 +183,7 @@ const handleSendCode = async () => {
       }
     }, 1000)
   } catch (error) {
+    // 表单验证失败不显示错误
     if (error !== false) {
       console.error('发送验证码失败:', error)
     }
@@ -198,18 +199,22 @@ const fillAccount = (phone) => {
 const handleLogin = async () => {
   try {
     await loginFormRef.value.validate()
-    
+
     loading.value = true
     const data = await login(loginForm.phone, loginForm.code)
-    
+
     // 保存用户信息
     userStore.setToken(data.token)
     userStore.setUserInfo(data.user)
-    
+    userStore.setCsrfToken(data.csrf_token)
+
     ElMessage.success('登录成功')
     router.push('/')
   } catch (error) {
-    console.error('登录失败:', error)
+    // 表单验证失败不显示错误
+    if (error !== false) {
+      console.error('登录失败:', error)
+    }
   } finally {
     loading.value = false
   }
@@ -489,6 +494,16 @@ const handleLogin = async () => {
   color: var(--primary-color);
   font-weight: 600;
   padding: 0 16px;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+}
+
+.login-form :deep(.el-input-group__append) {
+  background: transparent;
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  margin-left: 8px;
 }
 
 .code-btn:hover {
@@ -647,6 +662,18 @@ const handleLogin = async () => {
 
 [data-theme="dark"] .code-btn {
   color: var(--primary-color);
+  background: transparent;
+  border: none;
+}
+
+[data-theme="dark"] .code-btn:hover {
+  background: rgba(30, 136, 229, 0.15);
+}
+
+[data-theme="dark"] .login-form :deep(.el-input-group__append) {
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  box-shadow: none;
 }
 
 [data-theme="dark"] .login-btn {

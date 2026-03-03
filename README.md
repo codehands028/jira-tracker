@@ -193,6 +193,12 @@ sudo service nginx restart
 - 批量分配（管理员）
 - 批量关闭
 
+#### 工单状态说明
+- **处理中** (processing)：工单正在处理中
+- **待复测** (retesting)：工单已处理完成，等待测试人员复测
+- **已关闭** (closed)：工单已完成并关闭
+- **超时** (timeout)：工单处理超时，仍可进行流转、复测、关闭等操作
+
 ### 3. 通知中心
 - 工单流转通知
 - 超时提醒通知(未对接)
@@ -260,6 +266,20 @@ sudo service nginx restart
 - **路由**：Vue Router 4
 - **HTTP客户端**：Axios
 - **构建工具**：Vite
+
+### 安全机制
+
+#### CSRF保护
+系统实现了完整的CSRF（跨站请求伪造）保护机制：
+
+1. **登录时**：后端生成CSRF token并返回给前端
+2. **请求时**：前端在请求头 `X-CSRF-Token` 中携带token
+3. **验证时**：后端中间件验证token的有效性
+4. **刷新时**：后端可能返回新的token，前端自动更新
+
+**注意事项**：
+- 所有POST、PUT、DELETE请求都需要携带CSRF token
+- CSRF token存储在localStorage中
 
 ### 目录结构
 ```
@@ -345,6 +365,14 @@ jira-tracker/
 1. 确认 MySQL 服务正在运行
 2. 确认数据库已创建
 3. 确认配置文件中的连接信息正确
+
+### CSRF token验证失败
+如果遇到"CSRF token验证失败: 无效的CSRF token"错误：
+
+1. **清除浏览器缓存**：清除localStorage和sessionStorage
+2. **重新登录**：退出登录后重新登录，获取新的CSRF token
+3. **检查Redis**：确保Redis服务正常运行，CSRF token存储在Redis中
+4. **检查请求头**：在浏览器开发者工具中查看请求头是否包含 `X-CSRF-Token`
 
 ---
 

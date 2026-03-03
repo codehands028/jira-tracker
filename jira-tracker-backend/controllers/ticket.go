@@ -15,7 +15,7 @@ func CreateTicket(c *gin.Context) {
 
 	var req services.CreateTicketRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数格式错误，请检查输入内容"})
 		return
 	}
 
@@ -25,7 +25,7 @@ func CreateTicket(c *gin.Context) {
 	ticketService := services.NewTicketService()
 	ticket, err := ticketService.CreateTicket(&req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建工单失败，请稍后重试"})
 		return
 	}
 
@@ -45,10 +45,17 @@ func GetTicketList(c *gin.Context) {
 		currentUserID = uint(id)
 	}
 
+	// 解析超时筛选参数
+	var isTimeout *bool
+	if isTimeoutStr := c.Query("is_timeout"); isTimeoutStr != "" {
+		val := isTimeoutStr == "true"
+		isTimeout = &val
+	}
+
 	ticketService := services.NewTicketService()
-	tickets, total, err := ticketService.GetTicketList(page, pageSize, status, priority, currentUserID)
+	tickets, total, err := ticketService.GetTicketList(page, pageSize, status, priority, currentUserID, isTimeout)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取工单列表失败，请稍后重试"})
 		return
 	}
 
@@ -71,7 +78,7 @@ func GetTicketDetail(c *gin.Context) {
 	ticketService := services.NewTicketService()
 	ticket, flows, err := ticketService.GetTicketDetail(uint(id))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "获取工单详情失败，请稍后重试"})
 		return
 	}
 

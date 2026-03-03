@@ -74,7 +74,10 @@ func (s *UserService) Login(phone, code, ip, userAgent string) (*models.User, st
 	}
 
 	// 生成CSRF token
-	csrfToken := utils.GenerateCSRFToken(sessionID)
+	csrfToken, err := utils.GenerateCSRFToken(sessionID)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("生成CSRF token失败: %w", err)
+	}
 
 	return &user, token, csrfToken, nil
 }
