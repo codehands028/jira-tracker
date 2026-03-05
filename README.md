@@ -376,6 +376,14 @@ jira-tracker/
 
 ---
 
+## 📄 许可证
+
+本项目基于 [MIT License](LICENSE) 开源协议发布。
+
+Copyright (c) 2026 [codehands028](https://github.com/codehands028)
+
+---
+
 ## 📞 联系方式
 
 如有问题，请提交 Issue 或联系开发者。
