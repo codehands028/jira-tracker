@@ -70,6 +70,12 @@ const routes = [
         name: 'TimeoutRules',
         component: () => import('@/views/TimeoutRules.vue'),
         meta: { title: '超时规则', requiresAdmin: true }
+      },
+      {
+        path: 'sla-rules',
+        name: 'SLARules',
+        component: () => import('@/views/SLARules.vue'),
+        meta: { title: '时限规则', requiresAdmin: true }
       }
     ]
   }

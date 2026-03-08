@@ -113,6 +113,53 @@ INSERT INTO `timeout_rules` (`created_at`, `updated_at`, `name`, `normal_limit`,
 (NOW(), NOW(), '紧急规则', 14400, 28800, 0),
 (NOW(), NOW(), '宽松规则', 172800, 259200, 0);
 
+-- SLA规则表
+CREATE TABLE IF NOT EXISTS `sla_rules` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  `deleted_at` datetime(3) DEFAULT NULL,
+  `name` varchar(100) NOT NULL COMMENT '规则名称',
+  `ticket_type` varchar(50) DEFAULT NULL COMMENT '工单类型(bug/feature/task等)',
+  `priority` varchar(20) DEFAULT NULL COMMENT '优先级(low/medium/high/critical)',
+  `project` varchar(100) DEFAULT NULL COMMENT '项目标识',
+  `normal_limit` bigint NOT NULL COMMENT '普通SLA时限(秒)',
+  `severe_limit` bigint NOT NULL COMMENT '严重SLA时限(秒)',
+  `is_active` tinyint DEFAULT '1' COMMENT '是否启用',
+  `priority_order` int DEFAULT '0' COMMENT '匹配优先级，数值越大优先级越高',
+  PRIMARY KEY (`id`),
+  KEY `idx_sla_rules_deleted_at` (`deleted_at`),
+  KEY `idx_priority` (`priority`),
+  KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 插入默认SLA规则
+INSERT INTO `sla_rules` (`created_at`, `updated_at`, `name`, `ticket_type`, `priority`, `project`, `normal_limit`, `severe_limit`, `is_active`, `priority_order`) VALUES
+(NOW(), NOW(), '紧急工单SLA', '', 'critical', '', 14400, 28800, 1, 10),
+(NOW(), NOW(), '高优先级SLA', '', 'high', '', 28800, 57600, 1, 10),
+(NOW(), NOW(), '中优先级SLA', '', 'medium', '', 86400, 172800, 1, 10),
+(NOW(), NOW(), '低优先级SLA', '', 'low', '', 172800, 259200, 1, 10),
+(NOW(), NOW(), '默认SLA', '', '', '', 86400, 172800, 1, 0);
+
+-- 批量操作日志表
+CREATE TABLE IF NOT EXISTS `batch_operation_logs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  `deleted_at` datetime(3) DEFAULT NULL,
+  `user_id` bigint unsigned NOT NULL COMMENT '操作人ID',
+  `operation_type` varchar(50) NOT NULL COMMENT '操作类型(flow/assign/close)',
+  `ticket_ids` text NOT NULL COMMENT '涉及的工单ID列表(JSON)',
+  `ticket_count` int NOT NULL COMMENT '涉及工单数量',
+  `success_count` int NOT NULL COMMENT '成功数量',
+  `detail` text COMMENT '操作详情(JSON)',
+  `ip_address` varchar(50) DEFAULT NULL COMMENT '操作IP地址',
+  PRIMARY KEY (`id`),
+  KEY `idx_batch_operation_logs_deleted_at` (`deleted_at`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_operation_type` (`operation_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- 插入默认管理员账号
 INSERT INTO `users` (`created_at`, `updated_at`, `phone`, `name`, `role`, `status`, `ticket_num`) VALUES
 (NOW(), NOW(), '13800138000', '系统管理员', 'admin', 1, 0);

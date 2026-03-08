@@ -68,6 +68,8 @@ func SetupRouter() *gin.Engine {
 			tickets.POST("/:id/close", middleware.TestOrAdminMiddleware(), controllers.CloseTicket)
 			// 批量分配工单（管理员）
 			tickets.POST("/batch/assign", middleware.AdminMiddleware(), controllers.BatchAssignTickets)
+			// 批量流转工单
+			tickets.POST("/batch/flow", controllers.BatchFlowTickets)
 			// 批量关闭工单（测试或管理员）
 			tickets.POST("/batch/close", middleware.TestOrAdminMiddleware(), controllers.BatchCloseTickets)
 		}
@@ -104,6 +106,25 @@ func SetupRouter() *gin.Engine {
 			timeoutRules.PUT("/:id/active", controllers.SetActiveTimeoutRule)
 			timeoutRules.PUT("/:id/inactive", controllers.SetInactiveTimeoutRule)
 			timeoutRules.DELETE("/:id", controllers.DeleteTimeoutRule)
+		}
+
+		// SLA规则管理（管理员）
+		slaRules := api.Group("/sla-rules")
+		slaRules.Use(middleware.AdminMiddleware())
+		{
+			slaRules.GET("", controllers.GetSLARules)
+			slaRules.GET("/:id", controllers.GetSLARule)
+			slaRules.POST("", controllers.CreateSLARule)
+			slaRules.PUT("/:id", controllers.UpdateSLARule)
+			slaRules.PUT("/:id/toggle", controllers.ToggleSLARule)
+			slaRules.DELETE("/:id", controllers.DeleteSLARule)
+		}
+
+		// 批量操作日志（管理员）
+		batchLogs := api.Group("/batch-logs")
+		batchLogs.Use(middleware.AdminMiddleware())
+		{
+			batchLogs.GET("", controllers.GetBatchOperationLogs)
 		}
 	}
 

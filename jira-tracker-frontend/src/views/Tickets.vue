@@ -71,6 +71,7 @@
         </el-select>
 
         <el-select
+          v-if="isAdmin"
           v-model="filterUser"
           placeholder="处理人筛选"
           clearable
@@ -100,19 +101,24 @@
       </div>
       
       <div class="filter-right">
-        <el-button
-          v-if="selectedTickets.length > 0"
-          type="primary"
-          @click="showBatchDialog = true"
-        >
-          批量操作 ({{ selectedTickets.length }})
-        </el-button>
+        <el-button-group v-if="selectedTickets.length > 0" class="batch-button-group">
+          <el-button type="primary" @click="showBatchDialog = true">
+            批量操作 ({{ selectedTickets.length }})
+          </el-button>
+          <el-button type="primary" @click="handleSelectAll">
+            {{ isAllSelected ? '取消全选' : '全选当前页' }}
+          </el-button>
+          <el-button type="primary" @click="handleClearSelection">
+            清空选择
+          </el-button>
+        </el-button-group>
       </div>
     </div>
 
     <!-- 工单表格 -->
     <div class="table-container">
       <el-table
+        ref="tableRef"
         :data="tickets"
         v-loading="loading"
         @selection-change="handleSelectionChange"
@@ -320,18 +326,55 @@
     <el-dialog
       v-model="showBatchDialog"
       title="批量操作"
-      width="500px"
+      width="650px"
       class="modern-dialog"
     >
       <div class="batch-info">
         <el-icon class="info-icon"><InfoFilled /></el-icon>
-        <span>已选择 {{ selectedTickets.length }} 个工单</span>
+        <span>已选择 <strong>{{ selectedTickets.length }}</strong> 个工单</span>
+        <el-tag v-if="selectedTickets.length > 50" type="warning" size="small" style="margin-left: 8px;">
+          建议单次操作不超过50条以确保性能
+        </el-tag>
+      </div>
+
+      <!-- 工单概览 -->
+      <div class="batch-overview">
+        <div class="overview-header">
+          <span>工单概览</span>
+          <el-button link type="primary" size="small" @click="showAllTickets = !showAllTickets">
+            {{ showAllTickets ? '收起' : '展开全部' }}
+          </el-button>
+        </div>
+        <div class="overview-stats">
+          <el-tag type="primary" size="small">处理中: {{ selectedStats.processing }}</el-tag>
+          <el-tag type="warning" size="small">待复测: {{ selectedStats.retesting }}</el-tag>
+          <el-tag type="danger" size="small">超时: {{ selectedStats.timeout }}</el-tag>
+        </div>
+        <div class="overview-tickets" v-if="showAllTickets">
+          <el-tag
+            v-for="ticket in selectedTickets"
+            :key="ticket.id"
+            size="small"
+            :type="ticket.is_timeout ? 'danger' : 'info'"
+            style="margin: 4px;"
+          >
+            {{ ticket.jira_key }}
+          </el-tag>
+        </div>
       </div>
       
       <div class="batch-actions">
         <el-button
-          v-if="isAdmin"
           type="primary"
+          @click="showBatchFlowDialog = true"
+          class="batch-btn"
+        >
+          <el-icon><Right /></el-icon>
+          批量流转
+        </el-button>
+        <el-button
+          v-if="isAdmin"
+          type="warning"
           @click="showBatchAssignDialog = true"
           class="batch-btn"
         >
@@ -348,6 +391,54 @@
           批量关闭
         </el-button>
       </div>
+    </el-dialog>
+
+    <!-- 批量流转对话框 -->
+    <el-dialog
+      v-model="showBatchFlowDialog"
+      title="批量流转"
+      width="500px"
+      class="modern-dialog"
+    >
+      <el-form ref="batchFlowFormRef" :model="batchFlowForm" :rules="batchFlowRules" label-width="100px" label-position="top">
+        <el-form-item label="流转说明" prop="content">
+          <el-input
+            v-model="batchFlowForm.content"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入流转说明"
+          />
+        </el-form-item>
+        <el-form-item label="下一处理人" prop="to_user_id">
+          <el-select
+            v-model="batchFlowForm.to_user_id"
+            placeholder="选择处理人"
+            filterable
+          >
+            <el-option
+              v-for="user in users"
+              :key="user.id"
+              :label="`${user.name} [${getRoleLabel(user.role)}]`"
+              :value="user.id"
+            >
+              <span>{{ user.name }}</span>
+              <el-tag :type="getRoleType(user.role)" size="small" style="margin-left: 8px;">
+                {{ getRoleLabel(user.role) }}
+              </el-tag>
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showBatchFlowDialog = false">取消</el-button>
+        <el-button
+          type="primary"
+          @click="handleBatchFlow"
+          :loading="batchLoading"
+        >
+          确认流转
+        </el-button>
+      </template>
     </el-dialog>
 
     <!-- 批量分配对话框 -->
@@ -367,9 +458,14 @@
             <el-option
               v-for="user in users"
               :key="user.id"
-              :label="user.name"
+              :label="`${user.name} [${getRoleLabel(user.role)}]`"
               :value="user.id"
-            />
+            >
+              <span>{{ user.name }}</span>
+              <el-tag :type="getRoleType(user.role)" size="small" style="margin-left: 8px;">
+                {{ getRoleLabel(user.role) }}
+              </el-tag>
+            </el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="备注">
@@ -432,6 +528,7 @@ import {
   getTickets,
   createTicket,
   batchAssignTickets,
+  batchFlowTickets,
   batchCloseTickets,
   getUsers
 } from '@/api'
@@ -452,7 +549,11 @@ const showCreateDialog = ref(false)
 const showBatchDialog = ref(false)
 const showBatchAssignDialog = ref(false)
 const showBatchCloseDialog = ref(false)
+const showBatchFlowDialog = ref(false)
+const showAllTickets = ref(false)
 const createFormRef = ref(null)
+const batchFlowFormRef = ref(null)
+const tableRef = ref(null)
 
 const filterStatus = ref('')
 const filterPriority = ref('')
@@ -463,6 +564,16 @@ const searchKeyword = ref('')
 const batchAssignTo = ref(null)
 const batchAssignContent = ref('')
 const batchCloseConclusion = ref('')
+
+const batchFlowForm = reactive({
+  content: '',
+  to_user_id: null
+})
+
+const batchFlowRules = {
+  content: [{ required: true, message: '请输入流转说明', trigger: 'blur' }],
+  to_user_id: [{ required: true, message: '请选择处理人', trigger: 'change' }]
+}
 
 const pagination = reactive({
   page: 1,
@@ -502,6 +613,24 @@ const canBatchClose = computed(() => {
   return role === 'test' || role === 'admin'
 })
 
+const isAllSelected = computed(() => {
+  return tickets.value.length > 0 && selectedTickets.value.length === tickets.value.length
+})
+
+const selectedStats = computed(() => {
+  const stats = {
+    processing: 0,
+    retesting: 0,
+    timeout: 0
+  }
+  selectedTickets.value.forEach(ticket => {
+    if (ticket.status === 'processing') stats.processing++
+    if (ticket.status === 'retesting') stats.retesting++
+    if (ticket.is_timeout) stats.timeout++
+  })
+  return stats
+})
+
 const fetchTickets = async () => {
   // 延迟显示 loading，避免快速请求时的闪烁
   let loadingTimer = null
@@ -518,9 +647,14 @@ const fetchTickets = async () => {
       page: pagination.page,
       page_size: pagination.pageSize,
       status: filterStatus.value,
-      priority: filterPriority.value,
-      current_user_id: filterUser.value
+      priority: filterPriority.value
     }
+    
+    // 只有管理员才能按用户筛选
+    if (isAdmin.value && filterUser.value) {
+      params.current_user_id = filterUser.value
+    }
+    
     // 添加超时筛选参数
     if (filterTimeout.value) {
       params.is_timeout = filterTimeout.value
@@ -551,6 +685,20 @@ const fetchUsers = async () => {
 
 const handleSelectionChange = (selection) => {
   selectedTickets.value = selection
+}
+
+const handleSelectAll = () => {
+  if (isAllSelected.value) {
+    // 取消全选
+    tableRef.value?.clearSelection()
+  } else {
+    // 全选当前页
+    selectedTickets.value = [...tickets.value]
+  }
+}
+
+const handleClearSelection = () => {
+  tableRef.value?.clearSelection()
 }
 
 const handleCreate = async () => {
@@ -586,6 +734,10 @@ const handleBatchAssign = async () => {
     return
   }
 
+  if (selectedTickets.value.length > 100) {
+    ElMessage.warning('单次批量操作建议不超过100条工单，以确保系统性能')
+  }
+
   try {
     batchLoading.value = true
     const result = await batchAssignTickets({
@@ -593,13 +745,44 @@ const handleBatchAssign = async () => {
       to_user_id: batchAssignTo.value,
       content: batchAssignContent.value
     })
-    
+
     ElMessage.success(`成功分配 ${result.success_count} 个工单`)
     showBatchAssignDialog.value = false
     showBatchDialog.value = false
     fetchTickets()
   } catch (error) {
     console.error('批量分配失败:', error)
+    // 错误提示已在 request.js 中统一处理
+  } finally {
+    batchLoading.value = false
+  }
+}
+
+const handleBatchFlow = async () => {
+  try {
+    await batchFlowFormRef.value.validate()
+
+    if (selectedTickets.value.length > 100) {
+      ElMessage.warning('单次批量操作建议不超过100条工单，以确保系统性能')
+    }
+
+    batchLoading.value = true
+    const result = await batchFlowTickets({
+      ticket_ids: selectedTickets.value.map(t => t.id),
+      to_user_id: batchFlowForm.to_user_id,
+      content: batchFlowForm.content
+    })
+
+    ElMessage.success(`成功流转 ${result.success_count} 个工单`)
+    showBatchFlowDialog.value = false
+    showBatchDialog.value = false
+    Object.assign(batchFlowForm, { content: '', to_user_id: null })
+    fetchTickets()
+  } catch (error) {
+    if (error !== false) {
+      console.error('批量流转失败:', error)
+      // 错误提示已在 request.js 中统一处理
+    }
   } finally {
     batchLoading.value = false
   }
@@ -611,19 +794,24 @@ const handleBatchClose = async () => {
     return
   }
 
+  if (selectedTickets.value.length > 100) {
+    ElMessage.warning('单次批量操作建议不超过100条工单，以确保系统性能')
+  }
+
   try {
     batchLoading.value = true
     const result = await batchCloseTickets({
       ticket_ids: selectedTickets.value.map(t => t.id),
       conclusion: batchCloseConclusion.value
     })
-    
+
     ElMessage.success(`成功关闭 ${result.success_count} 个工单`)
     showBatchCloseDialog.value = false
     showBatchDialog.value = false
     fetchTickets()
   } catch (error) {
     console.error('批量关闭失败:', error)
+    // 错误提示已在 request.js 中统一处理
   } finally {
     batchLoading.value = false
   }
@@ -919,6 +1107,10 @@ onMounted(() => {
 }
 
 /* 批量操作 */
+.batch-button-group {
+  display: flex;
+}
+
 .batch-info {
   display: flex;
   align-items: center;
@@ -931,8 +1123,43 @@ onMounted(() => {
   font-weight: 500;
 }
 
+.batch-info strong {
+  font-size: 16px;
+  color: var(--primary-color);
+}
+
 .info-icon {
   font-size: 18px;
+}
+
+.batch-overview {
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.overview-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.overview-tickets {
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--bg-primary);
+  border-radius: 6px;
 }
 
 .batch-actions {

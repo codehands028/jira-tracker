@@ -106,6 +106,14 @@ export const batchAssignTickets = (data) => {
   })
 }
 
+export const batchFlowTickets = (data) => {
+  return request({
+    url: '/tickets/batch/flow',
+    method: 'post',
+    data
+  })
+}
+
 export const batchCloseTickets = (data) => {
   return request({
     url: '/tickets/batch/close',
@@ -227,5 +235,60 @@ export const deleteTimeoutRule = (id) => {
   return request({
     url: `/timeout-rules/${id}`,
     method: 'delete'
+  })
+}
+
+// 时限规则管理
+export const getSLARules = () => {
+  return request({
+    url: '/sla-rules',
+    method: 'get'
+  })
+}
+
+export const getSLARule = (id) => {
+  return request({
+    url: `/sla-rules/${id}`,
+    method: 'get'
+  })
+}
+
+export const createSLARule = (data) => {
+  return request({
+    url: '/sla-rules',
+    method: 'post',
+    data
+  })
+}
+
+export const updateSLARule = (id, data) => {
+  return request({
+    url: `/sla-rules/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+export const toggleSLARule = (id, isActive) => {
+  return request({
+    url: `/sla-rules/${id}/toggle`,
+    method: 'put',
+    data: { is_active: isActive }
+  })
+}
+
+export const deleteSLARule = (id) => {
+  return request({
+    url: `/sla-rules/${id}`,
+    method: 'delete'
+  })
+}
+
+// 批量操作日志
+export const getBatchOperationLogs = (params) => {
+  return request({
+    url: '/batch-logs',
+    method: 'get',
+    params
   })
 }

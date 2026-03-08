@@ -76,13 +76,38 @@ request.interceptors.response.use(
     }
 
     if (error.response) {
-      const errorMsg = error.response.data?.error || '请求失败'
+      let errorMsg = error.response.data?.error || '请求失败'
       const statusCode = error.response.status
 
       // 检查是否是重复工单错误
       if (errorMsg.includes('Duplicate entry') && errorMsg.includes('jira_key')) {
         showErrorMessage('该工单编号已存在，请检查后重新输入')
         return Promise.reject(error)
+      }
+
+      // 处理验证错误，转换为友好提示
+      if (errorMsg.includes('Key:') && errorMsg.includes('Error:Field validation')) {
+        // 提取字段名
+        const fieldMatch = errorMsg.match(/Key:'[^']+'\.(\w+)/)
+        if (fieldMatch) {
+          const field = fieldMatch[1]
+          const fieldNames = {
+            'ticket_ids': '工单',
+            'to_user_id': '处理人',
+            'content': '流转说明',
+            'conclusion': '关闭原因',
+            'operator_id': '操作者',
+            'jira_key': '工单编号',
+            'jira_url': 'Jira链接',
+            'current_user_id': '处理人',
+            'description': '问题描述',
+            'priority': '优先级'
+          }
+          const fieldName = fieldNames[field] || field
+          errorMsg = `请填写${fieldName}信息`
+        } else {
+          errorMsg = '请填写必填信息'
+        }
       }
 
       // 根据状态码提供友好的错误提示

@@ -37,5 +37,5 @@ security:
     - "http://localhost:5173"
     - "http://localhost:3000"
     - "http://localhost:8080"
-    - "http://localhost:15010"
-    - "http://localhost:15010/jira-tracker"
+    - "http://localhost:15010" # 生产环境域名
+    - "http://localhost:15010/jira-tracker" # 生产环境域名

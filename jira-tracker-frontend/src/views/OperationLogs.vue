@@ -20,6 +20,8 @@
           <el-option label="用户" value="user" />
           <el-option label="工单" value="ticket" />
           <el-option label="统计" value="statistics" />
+          <el-option label="超时规则" value="timeout_rule" />
+          <el-option label="时限规则" value="time_limit_rule" />
         </el-select>
         
         <el-select v-model="queryParams.action" placeholder="选择操作" clearable class="filter-item">
@@ -204,7 +206,9 @@ const getModuleLabel = (module) => {
     notification: '通知',
     statistics: '统计',
     operation_log: '操作日志',
-    timeout_rule: '超时规则'
+    timeout_rule: '超时规则',
+    time_limit_rule: '时限规则',
+    batch_operation_log: '批量操作日志'
   }
   return map[module] || module
 }
@@ -217,7 +221,9 @@ const getModuleType = (module) => {
     notification: 'success',
     statistics: 'info',
     operation_log: 'info',
-    timeout_rule: 'warning'
+    timeout_rule: 'warning',
+    time_limit_rule: 'warning',
+    batch_operation_log: 'info'
   }
   return map[module] || ''
 }
@@ -275,6 +281,8 @@ const getOperationDescription = (log) => {
     return `用户${actionLabel === '查询' ? '登录' : actionLabel}操作`
   } else if (path.includes('/timeout-rules')) {
     return `${actionLabel}超时规则`
+  } else if (path.includes('/sla-rules')) {
+    return `${actionLabel}时限规则`
   } else {
     return `${actionLabel}操作`
   }

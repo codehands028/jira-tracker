@@ -101,3 +101,37 @@ type TimeoutRule struct {
 	SevereLimit time.Duration `gorm:"type:bigint;not null;comment:严重超时时间(秒)" json:"severe_limit"` // 严重超时时间阈值（秒），超过此时间标记为严重超时
 	IsActive    bool          `gorm:"type:tinyint;default:0" json:"is_active"`               // 规则是否生效：false-未生效 true-已生效
 }
+
+// SLARule SLA规则表
+// 支持按工单类型/优先级/项目设置SLA阈值
+type SLARule struct {
+	ID          uint           `gorm:"primarykey" json:"id"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	Name        string         `gorm:"type:varchar(100);not null" json:"name"`                     // 规则名称
+	TicketType  string         `gorm:"type:varchar(50);comment:工单类型(bug/feature/task等)" json:"ticket_type"` // 工单类型，为空表示适用所有类型
+	Priority    string         `gorm:"type:varchar(20);comment:优先级(low/medium/high/critical)" json:"priority"` // 优先级，为空表示适用所有优先级
+	Project     string         `gorm:"type:varchar(100);comment:项目标识" json:"project"`            // 项目标识，为空表示适用所有项目
+	NormalLimit time.Duration  `gorm:"type:bigint;not null;comment:普通SLA时限(秒)" json:"normal_limit"` // 普通SLA时限（秒）
+	SevereLimit time.Duration  `gorm:"type:bigint;not null;comment:严重SLA时限(秒)" json:"severe_limit"` // 严重SLA时限（秒）
+	IsActive    bool           `gorm:"type:tinyint;default:1" json:"is_active"`                    // 是否启用
+	PriorityOrder int `gorm:"type:int;default:0;comment:匹配优先级，数值越大优先级越高" json:"priority_order"` // 匹配优先级，数值越大优先级越高
+}
+
+// BatchOperationLog 批量操作日志表
+// 记录批量操作的详细信息
+type BatchOperationLog struct {
+	ID          uint           `gorm:"primarykey" json:"id"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserID      uint           `gorm:"not null;index" json:"user_id"`                        // 操作人ID
+	User        User           `gorm:"foreignKey:UserID" json:"user"`                        // 操作人信息
+	OperationType string       `gorm:"type:varchar(50);not null" json:"operation_type"`      // 操作类型：flow/assign/close
+	TicketIDs   string         `gorm:"type:text;not null" json:"ticket_ids"`                 // 涉及的工单ID列表（JSON数组字符串）
+	TicketCount int            `gorm:"type:int;not null" json:"ticket_count"`                // 涉及工单数量
+	SuccessCount int           `gorm:"type:int;not null" json:"success_count"`               // 成功数量
+	Detail      string         `gorm:"type:text" json:"detail"`                              // 操作详情（JSON格式）
+	IPAddress   string         `gorm:"type:varchar(50)" json:"ip_address"`                   // 操作IP地址
+}

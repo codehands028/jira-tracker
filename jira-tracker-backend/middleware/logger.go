@@ -60,6 +60,10 @@ func getModule(path string) string {
 		return "operation_log"
 	case strings.HasPrefix(path, "/api/timeout-rules"):
 		return "timeout_rule"
+	case strings.HasPrefix(path, "/api/sla-rules"):
+		return "time_limit_rule"
+	case strings.HasPrefix(path, "/api/batch-logs"):
+		return "batch_operation_log"
 	default:
 		return "unknown"
 	}

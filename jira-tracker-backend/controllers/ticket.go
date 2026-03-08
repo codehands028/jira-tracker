@@ -39,10 +39,23 @@ func GetTicketList(c *gin.Context) {
 	status := c.Query("status")
 	priority := c.Query("priority")
 
+	// 从JWT token中获取用户信息
+	userID, _ := c.Get("user_id")
+	role, _ := c.Get("role")
+
 	var currentUserID uint
-	if userIDStr := c.Query("current_user_id"); userIDStr != "" {
-		id, _ := strconv.ParseUint(userIDStr, 10, 32)
-		currentUserID = uint(id)
+	
+	// 根据角色决定可见范围
+	// 管理员可以看到所有工单，普通用户只能看到自己的工单
+	if role.(string) != "admin" {
+		// 非管理员：强制只显示自己的工单
+		currentUserID = userID.(uint)
+	} else {
+		// 管理员：可以根据查询参数筛选
+		if userIDStr := c.Query("current_user_id"); userIDStr != "" {
+			id, _ := strconv.ParseUint(userIDStr, 10, 32)
+			currentUserID = uint(id)
+		}
 	}
 
 	// 解析超时筛选参数
@@ -82,9 +95,13 @@ func GetTicketDetail(c *gin.Context) {
 		return
 	}
 
+	// 获取SLA状态
+	slaStatus, _ := ticketService.GetTicketSLAStatus(uint(id))
+
 	c.JSON(http.StatusOK, gin.H{
-		"ticket": ticket,
-		"flows":  flows,
+		"ticket":     ticket,
+		"flows":      flows,
+		"sla_status": slaStatus,
 	})
 }
 
@@ -224,8 +241,55 @@ func BatchAssignTickets(c *gin.Context) {
 		return
 	}
 
+	// 记录批量操作日志
+	detail := &services.BatchOperationDetail{
+		ToUserID: req.ToUserID,
+		Content:  req.Content,
+	}
+	services.CreateBatchOperationLog(userID.(uint), "assign", req.TicketIDs, count, detail, c.ClientIP())
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "批量分配完成",
+		"total":         len(req.TicketIDs),
+		"success_count": count,
+	})
+}
+
+// BatchFlowTickets 批量流转工单
+func BatchFlowTickets(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "未授权"})
+		return
+	}
+
+	role, _ := c.Get("role")
+
+	var req services.BatchFlowRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.OperatorID = userID.(uint)
+	req.UserRole = role.(string)
+
+	ticketService := services.NewTicketService()
+	count, err := ticketService.BatchFlowTickets(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 记录批量操作日志
+	detail := &services.BatchOperationDetail{
+		ToUserID: req.ToUserID,
+		Content:  req.Content,
+	}
+	services.CreateBatchOperationLog(userID.(uint), "flow", req.TicketIDs, count, detail, c.ClientIP())
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":       "批量流转完成",
 		"total":         len(req.TicketIDs),
 		"success_count": count,
 	})
@@ -239,6 +303,8 @@ func BatchCloseTickets(c *gin.Context) {
 		return
 	}
 
+	role, _ := c.Get("role")
+
 	var req services.BatchCloseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -246,6 +312,7 @@ func BatchCloseTickets(c *gin.Context) {
 	}
 
 	req.OperatorID = userID.(uint)
+	req.UserRole = role.(string)
 
 	ticketService := services.NewTicketService()
 	count, err := ticketService.BatchCloseTickets(&req)
@@ -253,6 +320,12 @@ func BatchCloseTickets(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// 记录批量操作日志
+	detail := &services.BatchOperationDetail{
+		Conclusion: req.Conclusion,
+	}
+	services.CreateBatchOperationLog(userID.(uint), "close", req.TicketIDs, count, detail, c.ClientIP())
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "批量关闭完成",

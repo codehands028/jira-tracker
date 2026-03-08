@@ -45,14 +45,36 @@
             </div>
           </div>
           
-          <div class="info-item full">
-            <span class="label">问题描述</span>
-            <p class="description">{{ ticket.description || '暂无描述' }}</p>
-          </div>
-          
           <div class="info-item">
             <span class="label">创建时间</span>
             <span class="value">{{ formatTime(ticket.created_at) }}</span>
+          </div>
+
+          <!-- 时限状态显示 -->
+          <div class="info-item" v-if="slaStatus && ticket.status !== 'closed'">
+            <span class="label">时限状态</span>
+            <div class="sla-info">
+              <el-progress
+                :percentage="Math.min(slaStatus.progress, 100)"
+                :status="slaStatus.is_timeout ? 'exception' : (slaStatus.progress > 80 ? 'warning' : 'success')"
+                :stroke-width="10"
+              />
+              <div class="sla-detail">
+                <span v-if="slaStatus.is_timeout" class="sla-timeout">
+                  <el-icon><Warning /></el-icon>
+                  已超时 {{ formatDuration(Math.abs(slaStatus.remaining_time)) }}
+                </span>
+                <span v-else class="sla-remaining">
+                  剩余 {{ formatDuration(slaStatus.remaining_time) }}
+                </span>
+                <el-tag size="small" type="info">{{ slaStatus.rule_name }}</el-tag>
+              </div>
+            </div>
+          </div>
+          
+          <div class="info-item full">
+            <span class="label">问题描述</span>
+            <p class="description">{{ ticket.description || '暂无描述' }}</p>
           </div>
         </div>
 
@@ -94,7 +116,7 @@
 
         <div class="flow-timeline">
           <div
-            v-for="flow in flows"
+            v-for="(flow, index) in flows"
             :key="flow.id"
             class="flow-item"
             :class="{ timeout: flow.is_timeout }"
@@ -120,6 +142,12 @@
                 <span v-if="flow.process_time" class="process-time">
                   <el-icon><Clock /></el-icon>
                   处理时长: {{ formatDuration(flow.process_time) }}
+                  <span v-if="index < flows.length - 1 && flow.sla_info" class="sla-comparison">
+                    <el-divider direction="vertical" />
+                    <span :class="{'sla-exceed': flow.sla_info.is_exceed}">
+                      时限标准: {{ formatDuration(flow.sla_info.normal_limit) }}
+                    </span>
+                  </span>
                 </span>
                 <span class="time">{{ formatTime(flow.created_at) }}</span>
               </div>
@@ -137,7 +165,17 @@
         </el-form-item>
         <el-form-item label="下一处理人" prop="to_user_id">
           <el-select v-model="flowForm.to_user_id" placeholder="请选择处理人" filterable>
-            <el-option v-for="user in users" :key="user.id" :label="user.name" :value="user.id" />
+            <el-option 
+              v-for="user in users" 
+              :key="user.id" 
+              :label="`${user.name} [${getRoleLabel(user.role)}]`" 
+              :value="user.id" 
+            >
+              <span>{{ user.name }}</span>
+              <el-tag :type="getRoleType(user.role)" size="small" style="margin-left: 8px;">
+                {{ getRoleLabel(user.role) }}
+              </el-tag>
+            </el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -161,7 +199,17 @@
         </el-form-item>
         <el-form-item v-if="!retestForm.passed" label="处理人" prop="to_user_id">
           <el-select v-model="retestForm.to_user_id" placeholder="请选择处理人" filterable>
-            <el-option v-for="user in users" :key="user.id" :label="user.name" :value="user.id" />
+            <el-option 
+              v-for="user in users" 
+              :key="user.id" 
+              :label="`${user.name} [${getRoleLabel(user.role)}]`" 
+              :value="user.id" 
+            >
+              <span>{{ user.name }}</span>
+              <el-tag :type="getRoleType(user.role)" size="small" style="margin-left: 8px;">
+                {{ getRoleLabel(user.role) }}
+              </el-tag>
+            </el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -215,6 +263,7 @@ const closeFormRef = ref(null)
 const ticket = ref(null)
 const flows = ref([])
 const users = ref([])
+const slaStatus = ref(null)
 
 const isTestOrAdmin = computed(() => {
   const role = userStore.role
@@ -273,6 +322,7 @@ const fetchTicketDetail = async () => {
     const data = await getTicketDetail(route.params.id)
     ticket.value = data.ticket
     flows.value = data.flows
+    slaStatus.value = data.sla_status
   } catch (error) {
     console.error('获取工单详情失败:', error)
   } finally {
@@ -291,6 +341,26 @@ const fetchUsers = async () => {
 
 const handleBack = () => {
   router.back()
+}
+
+// 角色标签转换
+const getRoleLabel = (role) => {
+  const map = {
+    admin: '管理员',
+    test: '测试',
+    dev: '研发'
+  }
+  return map[role] || role
+}
+
+// 角色标签类型
+const getRoleType = (role) => {
+  const map = {
+    admin: 'danger',
+    test: 'warning',
+    dev: 'primary'
+  }
+  return map[role] || 'info'
 }
 
 const handleFlow = async () => {
@@ -353,8 +423,10 @@ const formatTime = (time) => {
 
 const formatDuration = (seconds) => {
   if (!seconds) return '-'
-  const dur = dayjs.duration(seconds, 'seconds')
-  const days = dur.days()
+  // 处理负数（已超时的情况）
+  const absSeconds = Math.abs(seconds)
+  const dur = dayjs.duration(absSeconds, 'seconds')
+  const days = Math.floor(absSeconds / 86400)
   const hours = dur.hours()
   const minutes = dur.minutes()
 
@@ -513,6 +585,35 @@ onMounted(() => {
   font-size: 12px;
 }
 
+/* SLA 信息样式 */
+.sla-info {
+  width: 100%;
+}
+
+.sla-info :deep(.el-progress) {
+  margin-bottom: 8px;
+}
+
+.sla-detail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.sla-timeout {
+  color: var(--danger-color);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.sla-remaining {
+  color: var(--success-color);
+  font-weight: 500;
+}
+
 /* 操作按钮 */
 .action-buttons {
   display: flex;
@@ -658,6 +759,21 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sla-comparison {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.sla-exceed {
+  color: var(--danger-color);
+  font-weight: 500;
 }
 
 /* 对话框 */

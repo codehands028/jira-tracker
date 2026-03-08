@@ -126,6 +126,12 @@ func (s *TicketService) FlowTicket(req *FlowTicketRequest) error {
 			return fmt.Errorf("更新工单失败: %w", err)
 		}
 
+		// 清除该工单的超时通知
+		if err := tx.Where("ticket_id = ? AND type = ?", ticket.ID, "timeout").
+			Delete(&models.Notification{}).Error; err != nil {
+			return fmt.Errorf("清除超时通知失败: %w", err)
+		}
+
 		// 更新原处理人待处理工单数
 		tx.Model(&models.User{}).Where("id = ?", req.FromUserID).
 			UpdateColumn("ticket_num", gorm.Expr("ticket_num - ?", 1))
@@ -230,7 +236,7 @@ func (s *TicketService) GetTicketList(page, pageSize int, status, priority strin
 }
 
 // GetTicketDetail 获取工单详情
-func (s *TicketService) GetTicketDetail(ticketID uint) (*models.Ticket, []models.TicketFlow, error) {
+func (s *TicketService) GetTicketDetail(ticketID uint) (*models.Ticket, []TicketFlowWithSLA, error) {
 	var ticket models.Ticket
 	if err := database.DB.Preload("CurrentUser").First(&ticket, ticketID).Error; err != nil {
 		return nil, nil, errors.New("工单不存在")
@@ -245,7 +251,27 @@ func (s *TicketService) GetTicketDetail(ticketID uint) (*models.Ticket, []models
 		return nil, nil, err
 	}
 
-	return &ticket, flows, nil
+	// 为每条流转记录添加SLA信息
+	slaService := NewSLARuleService()
+	flowsWithSLA := make([]TicketFlowWithSLA, len(flows))
+	for i, flow := range flows {
+		flowsWithSLA[i] = TicketFlowWithSLA{
+			TicketFlow: flow,
+		}
+
+		// 获取匹配的SLA规则
+		rule, err := slaService.MatchSLARule(ticket.Priority)
+		if err == nil && flow.ProcessTime > 0 {
+			flowsWithSLA[i].SLAInfo = &SLAInfoForFlow{
+				NormalLimit: int64(rule.NormalLimit.Seconds()),
+				SevereLimit: int64(rule.SevereLimit.Seconds()),
+				IsExceed:    flow.ProcessTime > rule.NormalLimit,
+				IsSevere:    flow.ProcessTime > rule.SevereLimit,
+			}
+		}
+	}
+
+	return &ticket, flowsWithSLA, nil
 }
 
 // CheckTimeout 检查工单是否超时
@@ -447,6 +473,20 @@ type TicketStatistic struct {
 	FlowCount     int64     `json:"flow_count"`
 }
 
+// TicketFlowWithSLA 带SLA信息的流转记录
+type TicketFlowWithSLA struct {
+	models.TicketFlow
+	SLAInfo *SLAInfoForFlow `json:"sla_info,omitempty"`
+}
+
+// SLAInfoForFlow 流转记录的SLA信息
+type SLAInfoForFlow struct {
+	NormalLimit int64 `json:"normal_limit"` // 普通SLA时限（秒）
+	SevereLimit int64 `json:"severe_limit"` // 严重SLA时限（秒）
+	IsExceed    bool  `json:"is_exceed"`    // 是否超过普通SLA
+	IsSevere    bool  `json:"is_severe"`    // 是否超过严重SLA
+}
+
 // DashboardData 数据看板数据
 type DashboardData struct {
 	TicketOverview   TicketOverview   `json:"ticket_overview"`
@@ -638,7 +678,7 @@ type BatchAssignRequest struct {
 	TicketIDs  []uint `json:"ticket_ids" binding:"required"`
 	ToUserID   uint   `json:"to_user_id" binding:"required"`
 	Content    string `json:"content"`
-	OperatorID uint   `json:"operator_id" binding:"required"`
+	OperatorID uint   `json:"operator_id"`
 }
 
 // BatchAssignTickets 批量分配工单
@@ -670,6 +710,12 @@ func (s *TicketService) BatchAssignTickets(req *BatchAssignRequest) (int, error)
 				"is_timeout":      false,
 				"timeout_level":   "",
 			}).Error; err != nil {
+				return err
+			}
+
+			// 清除该工单的超时通知
+			if err := tx.Where("ticket_id = ? AND type = ?", ticketID, "timeout").
+				Delete(&models.Notification{}).Error; err != nil {
 				return err
 			}
 
@@ -706,7 +752,8 @@ func calculateTrend(today, yesterday int64) int {
 type BatchCloseRequest struct {
 	TicketIDs  []uint `json:"ticket_ids" binding:"required"`
 	Conclusion string `json:"conclusion" binding:"required"`
-	OperatorID uint   `json:"operator_id" binding:"required"`
+	OperatorID uint   `json:"operator_id"`
+	UserRole   string `json:"user_role"` // 操作者角色
 }
 
 // BatchCloseTickets 批量关闭工单
@@ -722,6 +769,11 @@ func (s *TicketService) BatchCloseTickets(req *BatchCloseRequest) (int, error) {
 
 			if ticket.Status == "closed" {
 				return errors.New("工单已关闭")
+			}
+
+			// 权限检查：管理员可以关闭任何工单，测试人员只能关闭复测通过的工单
+			if req.UserRole != "admin" && ticket.Status != "retesting" {
+				return errors.New("测试人员只能关闭待复测状态的工单")
 			}
 
 			// 创建流转记录
@@ -754,6 +806,125 @@ func (s *TicketService) BatchCloseTickets(req *BatchCloseRequest) (int, error) {
 	}
 
 	return successCount, nil
+}
+
+// BatchFlowRequest 批量流转请求
+type BatchFlowRequest struct {
+	TicketIDs  []uint `json:"ticket_ids" binding:"required"`
+	ToUserID   uint   `json:"to_user_id" binding:"required"`
+	Content    string `json:"content" binding:"required"`
+	OperatorID uint   `json:"operator_id"`
+	UserRole   string `json:"user_role"` // 操作者角色
+}
+
+// BatchFlowTickets 批量流转工单
+func (s *TicketService) BatchFlowTickets(req *BatchFlowRequest) (int, error) {
+	successCount := 0
+
+	for _, ticketID := range req.TicketIDs {
+		err := database.DB.Transaction(func(tx *gorm.DB) error {
+			var ticket models.Ticket
+			if err := tx.First(&ticket, ticketID).Error; err != nil {
+				return err
+			}
+
+			// 已关闭的工单不能流转
+			if ticket.Status == "closed" {
+				return errors.New("已关闭的工单不能流转")
+			}
+
+			// 权限检查：研发人员只能流转自己的工单
+			if req.UserRole == "dev" && ticket.CurrentUserID != req.OperatorID {
+				return errors.New("研发人员只能流转自己的工单")
+			}
+
+			// 获取上一条流转记录
+			var lastFlow models.TicketFlow
+			if err := tx.Where("ticket_id = ?", ticket.ID).Order("created_at desc").First(&lastFlow).Error; err != nil {
+				return errors.New("获取流转记录失败")
+			}
+
+			// 计算处理时长
+			processTime := time.Since(lastFlow.CreatedAt)
+
+			// 检查是否超时
+			slaService := NewSLARuleService()
+			rule, err := slaService.MatchSLARule(ticket.Priority)
+			isTimeout := false
+			timeoutLevel := ""
+			if err == nil {
+				isTimeout = processTime > rule.NormalLimit
+				if isTimeout {
+					if processTime > rule.SevereLimit {
+						timeoutLevel = "severe"
+					} else {
+						timeoutLevel = "normal"
+					}
+				}
+			}
+
+			// 创建流转记录
+			flow := &models.TicketFlow{
+				TicketID:     ticketID,
+				FromUserID:   ticket.CurrentUserID,
+				ToUserID:     req.ToUserID,
+				Content:      req.Content,
+				ProcessTime:  processTime,
+				IsTimeout:    isTimeout,
+				TimeoutLevel: timeoutLevel,
+			}
+			if err := tx.Create(flow).Error; err != nil {
+				return err
+			}
+
+			// 更新工单
+			updates := map[string]any{
+				"current_user_id": req.ToUserID,
+				"is_timeout":      false,
+				"timeout_level":   "",
+			}
+			if err := tx.Model(&ticket).Updates(updates).Error; err != nil {
+				return err
+			}
+
+			// 清除该工单的超时通知
+			if err := tx.Where("ticket_id = ? AND type = ?", ticketID, "timeout").
+				Delete(&models.Notification{}).Error; err != nil {
+				return err
+			}
+
+			// 更新用户待处理工单数
+			tx.Model(&models.User{}).Where("id = ?", ticket.CurrentUserID).
+				UpdateColumn("ticket_num", gorm.Expr("ticket_num - ?", 1))
+			tx.Model(&models.User{}).Where("id = ?", req.ToUserID).
+				UpdateColumn("ticket_num", gorm.Expr("ticket_num + ?", 1))
+
+			return nil
+		})
+
+		if err == nil {
+			successCount++
+		}
+	}
+
+	return successCount, nil
+}
+
+// GetTicketSLAStatus 获取工单SLA状态
+func (s *TicketService) GetTicketSLAStatus(ticketID uint) (*SLAStatus, error) {
+	var ticket models.Ticket
+	if err := database.DB.First(&ticket, ticketID).Error; err != nil {
+		return nil, errors.New("工单不存在")
+	}
+
+	// 获取最后一条流转记录
+	var lastFlow models.TicketFlow
+	if err := database.DB.Where("ticket_id = ?", ticketID).Order("created_at desc").First(&lastFlow).Error; err != nil {
+		return nil, errors.New("获取流转记录失败")
+	}
+
+	slaService := NewSLARuleService()
+	return slaService.GetSLAStatus(ticketID, ticket.Priority, lastFlow.CreatedAt)
 }
 
 // calculateTrend 计算变化百分比

@@ -72,6 +72,11 @@
           <el-icon><Clock /></el-icon>
           <template #title>超时规则</template>
         </el-menu-item>
+        
+        <el-menu-item v-if="isAdmin" index="/sla-rules">
+          <el-icon><Timer /></el-icon>
+          <template #title>时限规则</template>
+        </el-menu-item>
       </el-menu>
       
       <!-- 用户信息卡片 -->

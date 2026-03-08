@@ -50,7 +50,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 获取token
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "未提供认证令牌"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "未提供认证令牌，请先登录"})
 			c.Abort()
 			return
 		}
@@ -58,14 +58,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 解析token
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "认证令牌格式错误"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "认证令牌格式错误，应为 'Bearer <token>'"})
 			c.Abort()
 			return
 		}
 
 		claims, err := utils.ParseToken(parts[1])
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "无效的认证令牌"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "认证令牌无效或已过期，请重新登录"})
 			c.Abort()
 			return
 		}
@@ -73,8 +73,13 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 验证会话是否有效
 		sessionService := services.NewSessionService()
 		isValid, err := sessionService.ValidateSession(parts[1])
-		if err != nil || !isValid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "会话已过期或失效，请重新登录"})
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "会话不存在或已过期，请重新登录"})
+			c.Abort()
+			return
+		}
+		if !isValid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "会话已失效，请重新登录"})
 			c.Abort()
 			return
 		}
@@ -82,7 +87,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		// 验证请求来源（仅验证User-Agent，允许IP变化）
 		userAgent := c.GetHeader("User-Agent")
 		if claims.UserAgent != userAgent {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "请求来源验证失败，请重新登录"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "浏览器环境发生变化，请重新登录"})
 			c.Abort()
 			return
 		}

@@ -30,6 +30,8 @@ func main() {
 		&models.Notification{},
 		&models.OperationLog{},
 		&models.TimeoutRule{},
+		&models.SLARule{},
+		&models.BatchOperationLog{},
 	); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
@@ -38,6 +40,7 @@ func main() {
 
 	// 初始化数据
 	initTimeoutRules()
+	initSLARules()
 	initAdminUser()
 
 	log.Println("Data initialization completed")
@@ -78,6 +81,66 @@ func initTimeoutRules() {
 			log.Printf("Failed to create timeout rule: %v", err)
 		} else {
 			log.Printf("Created timeout rule: %s", rule.Name)
+		}
+	}
+}
+
+// initSLARules 初始化SLA规则
+func initSLARules() {
+	var count int64
+	database.DB.Model(&models.SLARule{}).Count(&count)
+	if count > 0 {
+		log.Println("SLA rules already exist, skipping initialization")
+		return
+	}
+
+	rules := []models.SLARule{
+		{
+			Name:          "紧急工单时限",
+			Priority:      "critical",
+			NormalLimit:   4 * time.Hour,
+			SevereLimit:   8 * time.Hour,
+			IsActive:      true,
+			PriorityOrder: 10,
+		},
+		{
+			Name:          "高优先级时限",
+			Priority:      "high",
+			NormalLimit:   8 * time.Hour,
+			SevereLimit:   16 * time.Hour,
+			IsActive:      true,
+			PriorityOrder: 10,
+		},
+		{
+			Name:          "中优先级时限",
+			Priority:      "medium",
+			NormalLimit:   24 * time.Hour,
+			SevereLimit:   48 * time.Hour,
+			IsActive:      true,
+			PriorityOrder: 10,
+		},
+		{
+			Name:          "低优先级时限",
+			Priority:      "low",
+			NormalLimit:   48 * time.Hour,
+			SevereLimit:   72 * time.Hour,
+			IsActive:      true,
+			PriorityOrder: 10,
+		},
+		{
+			Name:          "默认时限",
+			NormalLimit:   24 * time.Hour,
+			SevereLimit:   48 * time.Hour,
+			IsActive:      true,
+			PriorityOrder: 0,
+		},
+	}
+
+	for _, rule := range rules {
+		if err := database.DB.Create(&rule).Error; err != nil {
+			log.Printf("Failed to create SLA rule: %v", err)
+		} else {
+			log.Printf("Created SLA rule: %s", rule.Name)
 		}
 	}
 }
