@@ -79,6 +79,29 @@ func SetupRouter() *gin.Engine {
 		{
 			statistics.GET("", middleware.AdminMiddleware(), controllers.GetStatistics)
 			statistics.GET("/dashboard", controllers.GetDashboard)
+			statistics.GET("/personal-dashboard", controllers.GetPersonalDashboard)
+		}
+
+		// 导出功能
+		export := api.Group("/export")
+		{
+			export.POST("/excel", controllers.ExportTicketsDirect)
+			export.POST("/excel/async", controllers.ExportTicketsAsync)
+			export.GET("/download", controllers.DownloadExcel)
+			export.GET("/task/:id", controllers.GetExportTaskStatus)
+		}
+
+		// 用户配置
+		userConfig := api.Group("/user-config")
+		{
+			userConfig.GET("", controllers.GetUserConfig)
+			userConfig.PUT("", controllers.UpdateUserConfig)
+		}
+
+		// 看板详情工单
+		dashboardTickets := api.Group("/dashboard")
+		{
+			dashboardTickets.GET("/tickets", controllers.GetDashboardTickets)
 		}
 
 		// 通知

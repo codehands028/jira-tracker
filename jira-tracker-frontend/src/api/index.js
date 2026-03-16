@@ -292,3 +292,74 @@ export const getBatchOperationLogs = (params) => {
     params
   })
 }
+
+// 个人数据看板
+export const getPersonalDashboard = (params) => {
+  return request({
+    url: '/statistics/personal-dashboard',
+    method: 'get',
+    params
+  })
+}
+
+// 导出工单Excel
+export const exportTicketsExcel = (data) => {
+  return request({
+    url: '/export/excel',
+    method: 'post',
+    data
+  })
+}
+
+// 异步导出工单Excel
+export const exportTicketsExcelAsync = (data) => {
+  return request({
+    url: '/export/excel/async',
+    method: 'post',
+    data
+  })
+}
+
+// 下载Excel文件
+export const downloadExcelFile = (filename) => {
+  return request({
+    url: '/export/download',
+    method: 'get',
+    params: { filename },
+    responseType: 'blob'
+  })
+}
+
+// 获取导出任务状态
+export const getExportTaskStatus = (taskId) => {
+  return request({
+    url: `/export/task/${taskId}`,
+    method: 'get'
+  })
+}
+
+// 获取用户配置
+export const getUserConfig = () => {
+  return request({
+    url: '/user-config',
+    method: 'get'
+  })
+}
+
+// 更新用户配置
+export const updateUserConfig = (data) => {
+  return request({
+    url: '/user-config',
+    method: 'put',
+    data
+  })
+}
+
+// 获取看板详情工单列表
+export const getDashboardTickets = (params) => {
+  return request({
+    url: '/dashboard/tickets',
+    method: 'get',
+    params
+  })
+}

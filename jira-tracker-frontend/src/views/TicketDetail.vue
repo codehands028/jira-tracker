@@ -190,8 +190,8 @@
       <el-form ref="retestFormRef" :model="retestForm" :rules="retestRules" label-width="100px">
         <el-form-item label="复测结果" prop="passed">
           <el-radio-group v-model="retestForm.passed">
-            <el-radio :label="true">通过</el-radio>
-            <el-radio :label="false">不通过</el-radio>
+            <el-radio :value="true">通过</el-radio>
+            <el-radio :value="false">不通过</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="复测结论" prop="content">

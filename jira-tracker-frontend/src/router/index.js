@@ -24,6 +24,12 @@ const routes = [
         meta: { title: '数据看板' }
       },
       {
+        path: 'personal-dashboard',
+        name: 'PersonalDashboard',
+        component: () => import('@/views/PersonalDashboard.vue'),
+        meta: { title: '个人数据看板' }
+      },
+      {
         path: 'tickets',
         name: 'Tickets',
         component: () => import('@/views/Tickets.vue'),

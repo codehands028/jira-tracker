@@ -69,6 +69,11 @@ func (s *UserService) Login(phone, code, ip, userAgent string) (*models.User, st
 
 	// 创建会话记录
 	sessionService := NewSessionService()
+	// 使该用户之前的所有会话失效（实现互踢功能：同一账号在别处登录时，之前的会话会被踢下线）
+	if err := sessionService.InvalidateAllUserSessions(user.ID); err != nil {
+		// 记录错误但不阻止登录，新会话仍然可以创建
+		fmt.Printf("使旧会话失效时出错 (userID=%d): %v\n", user.ID, err)
+	}
 	if err := sessionService.CreateSession(user.ID, token, sessionID, ip, userAgent); err != nil {
 		return nil, "", "", fmt.Errorf("创建会话失败: %w", err)
 	}

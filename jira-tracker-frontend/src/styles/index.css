@@ -1825,3 +1825,60 @@ body[data-theme="dark"] .el-select .el-tag .el-tag__close:hover {
   background-color: #EF5350 !important;
   color: #ffffff !important;
 }
+
+/* ========================================
+   Radio Button 单选按钮组深色主题
+   ======================================== */
+
+/* Radio Group 容器 */
+html[data-theme="dark"] .el-radio-group,
+body[data-theme="dark"] .el-radio-group {
+  background-color: transparent !important;
+}
+
+/* Radio Button 默认状态 */
+html[data-theme="dark"] .el-radio-button__inner,
+body[data-theme="dark"] .el-radio-button__inner {
+  background-color: #1E1E1E !important;
+  border-color: #333333 !important;
+  color: #BDBDBD !important;
+  box-shadow: none !important;
+}
+
+/* Radio Button 悬停状态 */
+html[data-theme="dark"] .el-radio-button__inner:hover,
+body[data-theme="dark"] .el-radio-button__inner:hover {
+  color: #1E88E5 !important;
+  border-color: #42A5F5 !important;
+}
+
+/* Radio Button 选中状态 */
+html[data-theme="dark"] .el-radio-button__original-radio:checked + .el-radio-button__inner,
+body[data-theme="dark"] .el-radio-button__original-radio:checked + .el-radio-button__inner {
+  background-color: #1E88E5 !important;
+  border-color: #1E88E5 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Radio Button 禁用状态 */
+html[data-theme="dark"] .el-radio-button.is-disabled .el-radio-button__inner,
+body[data-theme="dark"] .el-radio-button.is-disabled .el-radio-button__inner {
+  background-color: #2D2D2D !important;
+  border-color: #333333 !important;
+  color: #616161 !important;
+  cursor: not-allowed !important;
+}
+
+html[data-theme="dark"] .el-radio-button.is-disabled .el-radio-button__inner:hover,
+body[data-theme="dark"] .el-radio-button.is-disabled .el-radio-button__inner:hover {
+  color: #616161 !important;
+  border-color: #333333 !important;
+}
+
+/* Radio Button 焦点状态 */
+html[data-theme="dark"] .el-radio-button:focus .el-radio-button__inner,
+body[data-theme="dark"] .el-radio-button:focus .el-radio-button__inner {
+  border-color: #1E88E5 !important;
+  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.3) !important;
+}

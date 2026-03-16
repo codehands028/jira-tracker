@@ -106,29 +106,67 @@ case $choice in
         echo ""
         echo -e "${YELLOW}正在启动前后端服务...${NC}"
         
+        # 获取后端端口配置
+        BACKEND_PORT=$(cd jira-tracker-backend && grep -E "^\s*port:" config/config.yaml | head -1 | awk '{print $2}')
+        BACKEND_PORT=${BACKEND_PORT:-8080}
+        
         # 启动后端
         cd jira-tracker-backend
-        go run main.go &
+        go run main.go > /tmp/jira-backend.log 2>&1 &
         BACKEND_PID=$!
         
-        # 等待后端启动
-        sleep 3
+        # 等待后端启动并检查是否成功
+        echo -e "${YELLOW}等待后端服务启动...${NC}"
+        MAX_WAIT=30
+        WAIT_COUNT=0
+        BACKEND_READY=false
+        
+        while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+            # 检查进程是否还在运行
+            if ! kill -0 $BACKEND_PID 2>/dev/null; then
+                echo -e "${RED}后端服务启动失败！${NC}"
+                echo -e "${YELLOW}查看日志: tail -f /tmp/jira-backend.log${NC}"
+                exit 1
+            fi
+            
+            # 检查端口是否被监听
+            if nc -z localhost $BACKEND_PORT 2>/dev/null; then
+                BACKEND_READY=true
+                break
+            fi
+            
+            sleep 1
+            WAIT_COUNT=$((WAIT_COUNT + 1))
+            echo -n "."
+        done
+        echo ""
+        
+        if [ "$BACKEND_READY" = false ]; then
+            echo -e "${RED}后端服务启动超时（${MAX_WAIT}秒）！${NC}"
+            echo -e "${YELLOW}查看日志: tail -f /tmp/jira-backend.log${NC}"
+            kill $BACKEND_PID 2>/dev/null
+            exit 1
+        fi
+        
+        echo -e "${GREEN}✓ 后端服务启动成功 (PID: $BACKEND_PID)${NC}"
         
         # 启动前端
         cd ../jira-tracker-frontend
         npm install
-        npm run dev &
+        npm run dev > /tmp/jira-frontend.log 2>&1 &
         FRONTEND_PID=$!
         
         echo ""
         echo -e "${GREEN}服务已启动！${NC}"
-        echo -e "后端地址: ${GREEN}http://localhost:8080${NC}"
+        echo -e "后端地址: ${GREEN}http://localhost:$BACKEND_PORT${NC}"
         echo -e "前端地址: ${GREEN}http://localhost:3000${NC}"
+        echo -e "后端日志: ${YELLOW}/tmp/jira-backend.log${NC}"
+        echo -e "前端日志: ${YELLOW}/tmp/jira-frontend.log${NC}"
         echo ""
         echo "按 Ctrl+C 停止服务"
         
         # 等待中断信号
-        trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit" INT TERM
+        trap "echo ''; echo -e '${YELLOW}正在停止服务...${NC}'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit" INT TERM
         wait
         ;;
     5)

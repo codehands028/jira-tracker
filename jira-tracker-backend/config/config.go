@@ -15,6 +15,7 @@ type Config struct {
 	SMS              SMSConfig
 	Timeout          TimeoutConfig
 	Security         SecurityConfig
+	Export           ExportConfig
 }
 
 type ServerConfig struct {
@@ -59,6 +60,10 @@ type TimeoutConfig struct {
 type SecurityConfig struct {
 	EnableCodeVerification bool
 	AllowedOrigins         []string
+}
+
+type ExportConfig struct {
+	StoragePath string `mapstructure:"storage_path"` // 文件存储路径
 }
 
 var GlobalConfig *Config

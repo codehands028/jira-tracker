@@ -32,6 +32,11 @@
           <template #title>数据看板</template>
         </el-menu-item>
         
+        <el-menu-item index="/personal-dashboard">
+          <el-icon><User /></el-icon>
+          <template #title>个人看板</template>
+        </el-menu-item>
+        
         <el-menu-item index="/tickets">
           <el-icon><Tickets /></el-icon>
           <template #title>工单列表</template>

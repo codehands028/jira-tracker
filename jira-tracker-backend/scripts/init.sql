@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS `tickets` (
   `jira_key` varchar(50) NOT NULL,
   `jira_url` varchar(500) NOT NULL,
   `description` text,
+  `type` varchar(50) DEFAULT NULL COMMENT '工单类型(bug/feature/task/improvement)',
   `priority` varchar(20) DEFAULT NULL COMMENT 'low/medium/high/critical',
   `status` varchar(20) NOT NULL COMMENT 'processing/retesting/closed/timeout',
   `current_user_id` bigint unsigned NOT NULL,
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS `tickets` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_jira_key` (`jira_key`),
   KEY `idx_tickets_deleted_at` (`deleted_at`),
-  KEY `idx_current_user_id` (`current_user_id`)
+  KEY `idx_current_user_id` (`current_user_id`),
+  KEY `idx_type` (`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 工单流转记录表
@@ -170,3 +172,36 @@ INSERT INTO `users` (`created_at`, `updated_at`, `phone`, `name`, `role`, `statu
 (NOW(), NOW(), '13800138002', '李四', 'dev', 1, 0),
 (NOW(), NOW(), '13800138003', '王五', 'dev', 1, 0),
 (NOW(), NOW(), '13800138004', '赵六', 'test', 1, 0);
+
+-- 用户配置表
+CREATE TABLE IF NOT EXISTS `user_configs` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  `deleted_at` datetime(3) DEFAULT NULL,
+  `user_id` bigint unsigned NOT NULL COMMENT '用户ID',
+  `dashboard_config` text COMMENT '看板配置(JSON格式)',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_user_id` (`user_id`),
+  KEY `idx_user_configs_deleted_at` (`deleted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 导出任务表
+CREATE TABLE IF NOT EXISTS `export_tasks` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(3) DEFAULT NULL,
+  `updated_at` datetime(3) DEFAULT NULL,
+  `deleted_at` datetime(3) DEFAULT NULL,
+  `user_id` bigint unsigned NOT NULL COMMENT '创建任务的用户ID',
+  `status` varchar(20) DEFAULT 'pending' COMMENT '状态: pending/processing/completed/failed',
+  `total_count` int DEFAULT '0' COMMENT '总记录数',
+  `process_count` int DEFAULT '0' COMMENT '已处理记录数',
+  `file_path` varchar(500) DEFAULT NULL COMMENT '生成的文件路径',
+  `filename` varchar(200) DEFAULT NULL COMMENT '文件名',
+  `error` text COMMENT '错误信息',
+  `completed_at` datetime(3) DEFAULT NULL COMMENT '完成时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_export_tasks_deleted_at` (`deleted_at`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -30,6 +30,7 @@ type Ticket struct {
 	JiraKey       string         `gorm:"type:varchar(50);uniqueIndex;not null" json:"jira_key"` // Jira工单编号，唯一标识
 	JiraURL       string         `gorm:"type:varchar(500);not null" json:"jira_url"`            // Jira工单链接
 	Description   string         `gorm:"type:text" json:"description"`                          // 工单描述内容
+	Type          string         `gorm:"type:varchar(50);comment:bug/feature/task/improvement" json:"type"` // 工单类型：bug-缺陷 feature-功能 task-任务 improvement-改进
 	Priority      string         `gorm:"type:varchar(20);comment:low/medium/high/critical" json:"priority"` // 工单优先级：low-低 medium-中 high-高 critical-紧急
 	Status        string         `gorm:"type:varchar(20);not null;comment:processing/retesting/closed/timeout" json:"status"` // 工单状态：processing-处理中 retesting-待复测 closed-已关闭 timeout-超时
 	CurrentUserID uint           `gorm:"not null;index" json:"current_user_id"`                 // 当前处理人ID
@@ -134,4 +135,34 @@ type BatchOperationLog struct {
 	SuccessCount int           `gorm:"type:int;not null" json:"success_count"`               // 成功数量
 	Detail      string         `gorm:"type:text" json:"detail"`                              // 操作详情（JSON格式）
 	IPAddress   string         `gorm:"type:varchar(50)" json:"ip_address"`                   // 操作IP地址
+}
+
+// UserConfig 用户配置表
+// 存储用户的个性化配置，如看板展示维度等
+type UserConfig struct {
+	ID              uint           `gorm:"primarykey" json:"id"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserID          uint           `gorm:"not null;uniqueIndex" json:"user_id"`                  // 用户ID，唯一
+	User            User           `gorm:"foreignKey:UserID" json:"user"`                        // 用户信息
+	DashboardConfig string         `gorm:"type:text" json:"dashboard_config"`                    // 看板配置（JSON格式）
+}
+
+// ExportTask 导出任务表
+// 用于异步导出的任务状态管理
+type ExportTask struct {
+	ID           uint           `gorm:"primarykey" json:"id"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserID       uint           `gorm:"not null;index" json:"user_id"`                        // 创建任务的用户ID
+	User         User           `gorm:"foreignKey:UserID" json:"user"`                        // 用户信息
+	Status       string         `gorm:"type:varchar(20);default:'pending'" json:"status"`     // 状态：pending/processing/completed/failed
+	TotalCount   int            `gorm:"type:int;default:0" json:"total_count"`                // 总记录数
+	ProcessCount int            `gorm:"type:int;default:0" json:"process_count"`              // 已处理记录数
+	FilePath     string         `gorm:"type:varchar(500)" json:"file_path"`                   // 生成的文件路径
+	Filename     string         `gorm:"type:varchar(200)" json:"filename"`                    // 文件名
+	Error        string         `gorm:"type:text" json:"error"`                               // 错误信息
+	CompletedAt  *time.Time     `json:"completed_at"`                                         // 完成时间
 }

@@ -39,3 +39,6 @@ security:
     - "http://localhost:8080"
     - "http://localhost:15010" # 生产环境域名
     - "http://localhost:15010/jira-tracker" # 生产环境域名
+
+export:
+  storage_path: "/tmp/jira-tracker/exports" # 导出文件存储路径
